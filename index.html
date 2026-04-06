@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>掃除実績管理</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;min-height:100vh;color:#1a1a1a}
+.app{max-width:480px;margin:0 auto;background:#fff;min-height:100vh;display:flex;flex-direction:column}
+.header{background:#fff;border-bottom:1px solid #e5e5e5;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.header-title{font-size:17px;font-weight:600}
+.header-sub{font-size:12px;color:#888;margin-top:2px}
+.tab-bar{display:flex;border-bottom:1px solid #e5e5e5;overflow-x:auto;background:#fff}
+.tab{flex:1;min-width:56px;padding:10px 4px;font-size:12px;color:#888;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-family:inherit}
+.tab.active{color:#1a1a1a;font-weight:600;border-bottom-color:#1a1a1a}
+.content{flex:1;padding:16px;overflow-y:auto}
+.section-title{font-size:13px;font-weight:600;color:#888;margin-bottom:8px}
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:14px;margin-bottom:10px}
+.card-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;white-space:nowrap}
+.badge-pending{background:#fff3cd;color:#856404}
+.badge-approved{background:#d1ecf1;color:#0c5460}
+.badge-rejected{background:#f8d7da;color:#721c24}
+.btn{padding:9px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid #ddd;background:#fff;color:#1a1a1a;transition:all .15s;font-family:inherit}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.btn-sm{padding:5px 12px;font-size:13px}
+.btn-danger{border-color:#dc3545;color:#dc3545}
+.btn-csv{background:#d4edda;color:#155724;border-color:#c3e6cb;font-size:13px}
+.input-row{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.input-row label{font-size:13px;color:#555;font-weight:500}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:15px;background:#fff;color:#1a1a1a;font-family:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#1a1a1a}
+input[type=date]{font-size:14px}
+textarea{resize:vertical;min-height:70px}
+.divider{height:1px;background:#e5e5e5;margin:16px 0}
+.empty{text-align:center;padding:40px 16px;color:#888;font-size:14px}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.metric{background:#f8f8f8;border-radius:10px;padding:12px;text-align:center}
+.metric-num{font-size:22px;font-weight:700;color:#1a1a1a}
+.metric-label{font-size:11px;color:#888;margin-top:2px}
+.login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{width:100%;max-width:360px;border:1px solid #e5e5e5;border-radius:16px;padding:28px}
+.role-switch{display:flex;gap:4px;margin-bottom:20px;background:#f0f0f0;padding:4px;border-radius:10px}
+.role-btn{flex:1;padding:12px 9px;border:none;border-radius:7px;background:transparent;color:#555;font-size:14px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s;-webkit-tap-highlight-color:rgba(0,0,0,.1);touch-action:manipulation}
+.role-btn.active{background:#fff;color:#1a1a1a;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px}
+.alert-success{background:#d4edda;color:#155724}
+.alert-error{background:#f8d7da;color:#721c24}
+.hint{font-size:12px;color:#888;margin-top:4px}
+.chk-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f0f0}
+.chk-item:last-child{border-bottom:none}
+.chk{width:24px;height:24px;border:2px solid #ddd;border-radius:6px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.chk.checked{background:#1a1a1a;border-color:#1a1a1a}
+.chk-mark{color:#fff;font-size:14px;font-weight:700}
+.emp-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0}
+.emp-row:last-child{border-bottom:none}
+.emp-avatar{width:36px;height:36px;border-radius:50%;background:#e8f0fe;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#1a73e8;flex-shrink:0}
+.report-table{width:100%;border-collapse:collapse;font-size:13px}
+.report-table th{text-align:left;padding:8px 6px;border-bottom:2px solid #e5e5e5;color:#888;font-weight:600;white-space:nowrap}
+.report-table td{padding:9px 6px;border-bottom:1px solid #f0f0f0;color:#1a1a1a}
+.report-table tr:last-child td{border-bottom:none}
+.bar-wrap{display:flex;align-items:center;gap:6px}
+.bar-bg{flex:1;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;min-width:40px}
+.bar-fill{height:100%;background:#1a1a1a;border-radius:3px}
+.period-tabs{display:flex;gap:4px;margin-bottom:12px;background:#f0f0f0;padding:4px;border-radius:10px}
+.period-tab{flex:1;padding:7px 4px;border:none;border-radius:7px;background:transparent;color:#888;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s;white-space:nowrap}
+.period-tab.active{background:#fff;color:#1a1a1a;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.date-range-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.date-range-row input[type=date]{flex:1;font-size:13px;padding:8px 10px}
+.month-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.month-chip{padding:8px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#888;font-size:13px;cursor:pointer;text-align:center;font-family:inherit;font-weight:500;transition:all .15s}
+.month-chip.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.csv-section{background:#f8f8f8;border-radius:12px;padding:16px;margin-bottom:14px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:100}
+.modal{background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:16px}
+.hidden{display:none}
+.save-bar{font-size:13px;text-align:center;padding:8px;font-weight:500}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid #e5e5e5;border-top-color:#1a1a1a;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- ログイン画面 -->
+  <div id="login-screen" style="display:flex;flex-direction:column;flex:1">
+    <div class="header"><div class="header-title">🧹 掃除実績管理</div></div>
+    <div class="login-wrap">
+      <div class="login-card">
+        <div style="font-size:36px;text-align:center;margin-bottom:10px">🧹</div>
+        <div style="font-size:20px;font-weight:700;text-align:center;margin-bottom:4px">ログイン</div>
+        <div style="font-size:13px;color:#888;text-align:center;margin-bottom:24px">名前と社員コードを入力してください</div>
+
+        <div id="login-alert" class="hidden"></div>
+        <div class="input-row">
+          <label>名前</label>
+          <input type="text" id="login-name" placeholder="例：山田 太郎">
+        </div>
+        <div class="input-row">
+          <label id="code-label">社員コード</label>
+          <input type="text" id="login-code" placeholder="例：11664" inputmode="numeric">
+          <span class="hint" id="code-hint">社員コードは管理者から受け取ってください</span>
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:12px" onclick="doLogin()" id="login-btn">ログイン</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- メイン画面 -->
+  <div id="main-screen" class="hidden" style="display:none;flex-direction:column;flex:1">
+    <div id="save-bar" class="save-bar hidden"></div>
+    <div class="header">
+      <div>
+        <div class="header-title">🧹 掃除実績管理</div>
+        <div class="header-sub" id="header-sub"></div>
+      </div>
+      <button class="btn btn-sm" onclick="doLogout()">ログアウト</button>
+    </div>
+    <div class="tab-bar">
+      <button class="tab active" onclick="showTab('input')">実績入力</button>
+      <button class="tab" onclick="showTab('history')">履歴</button>
+      <button class="tab admin-only hidden" onclick="showTab('approve')">承認</button>
+      <button class="tab admin-only hidden" onclick="showTab('report')">集計</button>
+      <button class="tab admin-only hidden" onclick="showTab('settings')">設定</button>
+    </div>
+    <div class="content" id="tab-input">
+      <div id="today-date" class="section-title" style="margin-bottom:12px"></div>
+      <div id="today-banner" class="hidden" style="background:#d4edda;color:#155724;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;font-weight:500"></div>
+      <div class="card" style="margin-bottom:14px"><div id="place-checklist"></div></div>
+      <div class="input-row"><label>備考（任意）</label><textarea id="input-note" placeholder="特記事項があれば入力"></textarea></div>
+      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="submitRecord()">実績を提出する</button>
+    </div>
+    <div class="content hidden" id="tab-history">
+      <div class="section-title" style="margin-bottom:12px">過去の実績</div>
+      <div id="history-list"></div>
+    </div>
+    <div class="content hidden" id="tab-approve">
+      <div class="summary-grid" id="approve-summary"></div>
+      <div class="section-title" style="margin-bottom:8px">承認待ち</div>
+      <div id="approve-list"></div>
+      <div id="approved-list"></div>
+    </div>
+    <div class="content hidden" id="tab-report">
+      <div class="section-title" style="margin-bottom:8px">期間指定</div>
+      <div class="period-tabs">
+        <button class="period-tab active" id="pt-month" onclick="setPeriodMode('month')">月選択</button>
+        <button class="period-tab" id="pt-range" onclick="setPeriodMode('range')">開始〜終了</button>
+        <button class="period-tab" id="pt-preset" onclick="setPeriodMode('preset')">クイック</button>
+      </div>
+      <div id="mode-month"><div class="month-grid" id="month-grid"></div></div>
+      <div id="mode-range" class="hidden">
+        <div class="date-range-row">
+          <input type="date" id="date-from"><span style="color:#888">〜</span><input type="date" id="date-to">
+        </div>
+        <button class="btn btn-primary btn-sm" style="width:100%;margin-bottom:12px" onclick="applyRange()">この期間で絞り込む</button>
+      </div>
+      <div id="mode-preset" class="hidden">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+          <button class="btn btn-sm" onclick="applyPreset('today')">今日</button>
+          <button class="btn btn-sm" onclick="applyPreset('week')">今週</button>
+          <button class="btn btn-sm" onclick="applyPreset('last7')">直近7日間</button>
+          <button class="btn btn-sm" onclick="applyPreset('last30')">直近30日間</button>
+          <button class="btn btn-sm" onclick="applyPreset('thismonth')">今月</button>
+          <button class="btn btn-sm" onclick="applyPreset('lastmonth')">先月</button>
+          <button class="btn btn-sm" onclick="applyPreset('quarter')">直近3ヶ月</button>
+          <button class="btn btn-sm" onclick="applyPreset('all')">全期間</button>
+        </div>
+      </div>
+      <div id="active-period" style="font-size:12px;color:#888;margin-bottom:12px;padding:8px 12px;background:#f8f8f8;border-radius:8px;font-weight:500"></div>
+      <div class="input-row" style="margin-bottom:14px">
+        <label>従業員で絞り込む</label>
+        <select id="filter-emp" onchange="renderReport()">
+          <option value="">全従業員</option>
+        </select>
+      </div>
+      <div class="summary-grid" id="report-summary"></div>
+      <div class="section-title" style="margin-bottom:8px">従業員別 実績</div>
+      <div class="card" style="padding:0 14px;overflow-x:auto;margin-bottom:14px">
+        <table class="report-table"><thead><tr><th>名前</th><th>提出</th><th>承認</th><th>承認率</th></tr></thead><tbody id="emp-tbody"></tbody></table>
+      </div>
+      <div class="section-title" style="margin-bottom:8px">日別 提出件数</div>
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div id="daily-chart" style="display:flex;align-items:flex-end;gap:2px;height:80px"></div>
+        <div id="daily-labels" style="display:flex;gap:2px;margin-top:4px"></div>
+      </div>
+      <div class="csv-section">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">CSV出力</div>
+        <div style="font-size:12px;color:#888;margin-bottom:10px">絞り込み中の期間・従業員で出力します</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-csv" onclick="exportCSV('summary')">従業員別集計をCSV出力</button>
+          <button class="btn btn-csv" onclick="exportCSV('detail')">全実績の詳細をCSV出力</button>
+        </div>
+      </div>
+    </div>
+    <div class="content hidden" id="tab-settings">
+      <div class="section-title" style="margin-bottom:12px">掃除場所の管理</div>
+      <div id="place-list"></div>
+      <button class="btn" style="width:100%;margin-top:8px" onclick="openModal('modal-place')">+ 場所を追加</button>
+      <div class="divider"></div>
+      <div class="section-title" style="margin-bottom:12px">従業員の管理</div>
+      <div id="emp-list"></div>
+      <button class="btn" style="width:100%;margin-top:8px" onclick="openModal('modal-emp')">+ 従業員を追加</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-place" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">掃除場所を追加</div>
+    <div class="input-row"><label>場所名</label><input type="text" id="new-place-name" placeholder="例：トイレ（1F）"></div>
+    <div class="input-row"><label>メモ（任意）</label><input type="text" id="new-place-memo" placeholder="例：毎日必須"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" style="flex:1" onclick="closeModal('modal-place')">キャンセル</button>
+      <button class="btn btn-primary" style="flex:1" onclick="addPlace()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-emp" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">従業員を追加</div>
+    <div class="input-row"><label>名前</label><input type="text" id="new-emp-name" placeholder="例：田中 次郎"></div>
+    <div class="input-row">
+      <label>社員コード（5桁数字）</label>
+      <input type="text" id="new-emp-code" placeholder="例：00002" inputmode="numeric" maxlength="5">
+      <span class="hint">重複不可・ログイン時に使用</span>
+    </div>
+    <div class="input-row"><label>役割</label>
+      <select id="new-emp-role"><option value="staff">従業員</option><option value="admin">管理者</option></select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" style="flex:1" onclick="closeModal('modal-emp')">キャンセル</button>
+      <button class="btn btn-primary" style="flex:1" onclick="addEmp()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// Firebase SDK（認証なし・Firestoreのみ）
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot, updateDoc, deleteDoc, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBWSeCAtV1IDQnFkT8OhL7AK5SRk14D_I0",
+  authDomain: "cleaning-afbd0.firebaseapp.com",
+  projectId: "cleaning-afbd0",
+  storageBucket: "cleaning-afbd0.firebasestorage.app",
+  messagingSenderId: "581999284320",
+  appId: "1:581999284320:web:bc82faa67cdc76064e7305"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+
+let currentEmp = null;
+let places = [], employees = [], records = [];
+let checkedToday = {}, loginRole = 'staff';
+let periodFilter = { from: null, to: null, label: '今月', monthKey: null };
+let unsubPlaces, unsubEmployees, unsubRecords;
+
+// ===== 起動時にFirestoreから従業員データ取得 =====
+async function init() {
+  try {
+    const snap = await getDocs(collection(db, 'employees'));
+    employees = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    showLoginScreen();
+  } catch(e) {
+    console.error(e);
+    // Firestoreに繋がらなくてもログイン画面を表示
+    showLoginScreen();
+  }
+}
+
+function showLoginScreen() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('main-screen').classList.add('hidden');
+}
+
+init();
+
+// ===== ログイン =====
+window.setRole = function(r) {
+  loginRole = r;
+  const staffEl = document.getElementById('role-staff');
+  const adminEl = document.getElementById('role-admin');
+  if (r === 'staff') {
+    staffEl.style.background = '#1a1a1a';
+    staffEl.style.color = '#fff';
+    adminEl.style.background = '#fff';
+    adminEl.style.color = '#1a1a1a';
+  } else {
+    adminEl.style.background = '#1a1a1a';
+    adminEl.style.color = '#fff';
+    staffEl.style.background = '#fff';
+    staffEl.style.color = '#1a1a1a';
+  }
+  document.getElementById('code-label').textContent = r==='admin' ? '管理者コード' : '社員コード';
+  document.getElementById('code-hint').textContent = r==='admin' ? '管理者コードを入力' : '社員コードは管理者から受け取ってください';
+  document.getElementById('login-code').placeholder = r==='admin' ? '例：11664' : '例：00001';
+};
+
+window.doLogin = async function() {
+  const name = document.getElementById('login-name').value.trim();
+  const code = document.getElementById('login-code').value.trim();
+  const al = document.getElementById('login-alert');
+  if (!name || !code) { showAlert(al, '名前と社員コードを入力してください', 'error'); return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.innerHTML = '<span class="spinner"></span>確認中...';
+  btn.disabled = true;
+
+  try {
+    const snap = await getDocs(collection(db, 'employees'));
+    employees = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    // 役割に関係なく名前とコードで照合
+    const emp = employees.find(e => e.name === name && String(e.code) === String(code));
+    if (!emp) {
+      showAlert(al, '名前または社員コードが正しくありません', 'error');
+      btn.innerHTML = 'ログイン'; btn.disabled = false;
+      return;
+    }
+    currentEmp = emp;
+    checkedToday = {};
+    startApp();
+  } catch(e) {
+    showAlert(al, 'サーバーに接続できません。通信環境を確認してください。', 'error');
+    btn.innerHTML = 'ログイン'; btn.disabled = false;
+  }
+};
+
+window.doLogout = function() {
+  if (unsubPlaces) unsubPlaces();
+  if (unsubEmployees) unsubEmployees();
+  if (unsubRecords) unsubRecords();
+  currentEmp = null;
+  document.getElementById('login-name').value = '';
+  document.getElementById('login-code').value = '';
+  document.getElementById('login-btn').innerHTML = 'ログイン';
+  document.getElementById('login-btn').disabled = false;
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('main-screen').classList.add('hidden');
+  document.getElementById('login-screen').style.display = 'flex';
+};
+
+function startApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  const ms = document.getElementById('main-screen');
+  ms.classList.remove('hidden');
+  ms.style.display = 'flex';
+  document.getElementById('header-sub').textContent = currentEmp.name + '（' + (currentEmp.role==='admin'?'管理者':'従業員') + '・' + currentEmp.code + '）';
+  document.querySelectorAll('.admin-only').forEach(t => t.classList.toggle('hidden', currentEmp.role !== 'admin'));
+  subscribeData();
+  showTab('input');
+  scheduleAutoSave();
+}
+
+function subscribeData() {
+  unsubPlaces = onSnapshot(collection(db, 'places'), snap => {
+    places = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b)=>(a.order||0)-(b.order||0));
+    if (!document.getElementById('tab-input').classList.contains('hidden')) renderChecklist();
+    if (!document.getElementById('tab-settings').classList.contains('hidden')) renderSettings();
+  });
+  unsubEmployees = onSnapshot(collection(db, 'employees'), snap => {
+    employees = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!document.getElementById('tab-settings').classList.contains('hidden')) renderSettings();
+  });
+  unsubRecords = onSnapshot(collection(db, 'records'), snap => {
+    records = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.rawDate||'').localeCompare(a.rawDate||''));
+    renderHistory();
+    renderApprove();
+    if (!document.getElementById('tab-report').classList.contains('hidden')) renderReport();
+    checkTodayBanner();
+  });
+}
+
+window.showTab = function(name) {
+  ['input','history','approve','report','settings'].forEach(t => document.getElementById('tab-'+t).classList.add('hidden'));
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['input','history','approve','report','settings'][i]===name));
+  document.getElementById('tab-'+name).classList.remove('hidden');
+  if (name==='input') renderChecklist();
+  if (name==='history') renderHistory();
+  if (name==='approve') renderApprove();
+  if (name==='report') initReport();
+  if (name==='settings') renderSettings();
+};
+
+function renderChecklist() {
+  document.getElementById('today-date').textContent = getTodayStr() + '（本日）';
+  checkTodayBanner();
+  const cl = document.getElementById('place-checklist');
+  if (!places.length) { cl.innerHTML='<div class="empty">掃除場所が登録されていません</div>'; return; }
+  cl.innerHTML = places.map(p => `
+    <div class="chk-item">
+      <div class="chk ${checkedToday[p.id]?'checked':''}" onclick="toggleCheck('${p.id}')">
+        ${checkedToday[p.id]?'<span class="chk-mark">✓</span>':''}
+      </div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:500">${p.name}</div>
+        ${p.memo?`<div style="font-size:12px;color:#888">${p.memo}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function checkTodayBanner() {
+  const today = new Date().toISOString().slice(0,10);
+  const myRec = records.find(r => r.rawDate===today && String(r.code)===String(currentEmp.code));
+  const banner = document.getElementById('today-banner');
+  if (myRec) {
+    const s = {pending:'承認待ち',approved:'承認済み',rejected:'差し戻し'}[myRec.status]||myRec.status;
+    banner.textContent = `本日 ${myRec.submittedAt} に提出済み（${s}）`;
+    banner.classList.remove('hidden');
+  } else { banner.classList.add('hidden'); }
+}
+
+window.toggleCheck = function(id) { checkedToday[id]=!checkedToday[id]; renderChecklist(); };
+
+window.submitRecord = async function() {
+  const done = Object.values(checkedToday).filter(Boolean).length;
+  if (!done) { alert('少なくとも1か所チェックしてください'); return; }
+  const today = getTodayStr(), rawDate = new Date().toISOString().slice(0,10);
+  // 本日のみ上書き確認（過去のデータは消さない）
+  const existing = records.find(r => r.rawDate===rawDate && String(r.code)===String(currentEmp.code));
+  if (existing) {
+    if (!confirm('本日はすでに提出済みです。上書きしますか？\n※今日の実績のみ更新されます')) return;
+    await deleteDoc(doc(db,'records',existing.id));
+  }
+  await addDoc(collection(db,'records'), {
+    date: today, rawDate, user: currentEmp.name, code: currentEmp.code,
+    checked: {...checkedToday}, note: document.getElementById('input-note').value,
+    status: 'pending', submittedAt: new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}),
+    createdAt: serverTimestamp()
+  });
+  document.getElementById('input-note').value=''; checkedToday={};
+  showSaveBar('実績を提出しました ✓'); renderChecklist();
+};
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const mine = currentEmp.role==='admin' ? records : records.filter(r=>String(r.code)===String(currentEmp.code));
+  if (!mine.length) { list.innerHTML='<div class="empty">実績がありません</div>'; return; }
+  const sL={pending:'承認待',approved:'承認済',rejected:'差戻し'};
+  const bC={pending:'badge-pending',approved:'badge-approved',rejected:'badge-rejected'};
+  list.innerHTML = mine.map(r => {
+    const cnt = Object.values(r.checked||{}).filter(Boolean).length;
+    return `<div class="card"><div class="card-row">
+      <div>
+        <div style="font-size:15px;font-weight:600">${r.date}</div>
+        <div style="font-size:12px;color:#888">${r.user}（${r.code}）｜${cnt}か所｜${r.submittedAt}提出</div>
+        ${r.note?`<div style="font-size:12px;color:#888">備考：${r.note}</div>`:''}
+      </div>
+      <span class="badge ${bC[r.status]||''}">${sL[r.status]||r.status}</span>
+    </div></div>`;
+  }).join('');
+}
+
+window.renderApprove = function renderApprove() {
+  const pending = records.filter(r=>r.status==='pending');
+  const approvedRecs = records.filter(r=>r.status==='approved');
+  document.getElementById('approve-summary').innerHTML=`
+    <div class="metric"><div class="metric-num">${records.length}</div><div class="metric-label">総実績</div></div>
+    <div class="metric"><div class="metric-num">${pending.length}</div><div class="metric-label">承認待ち</div></div>
+    <div class="metric"><div class="metric-num">${approvedRecs.length}</div><div class="metric-label">承認済み</div></div>`;
+  const list = document.getElementById('approve-list');
+  list.innerHTML = pending.length ? pending.map(r => {
+    const cnt = Object.values(r.checked||{}).filter(Boolean).length;
+    return `<div class="card">
+      <div class="card-row" style="margin-bottom:10px">
+        <div>
+          <div style="font-size:15px;font-weight:600">${r.user} <span style="font-size:12px;font-weight:400;color:#888">${r.code}</span></div>
+          <div style="font-size:12px;color:#888">${r.date}｜${cnt}か所｜${r.submittedAt}提出</div>
+          ${r.note?`<div style="font-size:12px;color:#888">備考：${r.note}</div>`:''}
+        </div>
+        <span class="badge badge-pending">承認待ち</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm btn-primary" style="flex:1" onclick="approveRec('${r.id}')">承認</button>
+        <button class="btn btn-sm btn-danger" style="flex:1" onclick="rejectRec('${r.id}')">差し戻す</button>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">承認待ちはありません</div>';
+
+  // 承認済みセクション
+  const approvedEl = document.getElementById('approved-list');
+  if (approvedRecs.length) {
+    approvedEl.innerHTML = '<div class="section-title" style="margin-bottom:8px;margin-top:16px">承認済み</div>' +
+      approvedRecs.map(r => {
+        const cnt = Object.values(r.checked||{}).filter(Boolean).length;
+        return `<div class="card">
+          <div class="card-row">
+            <div>
+              <div style="font-size:15px;font-weight:600">${r.user} <span style="font-size:12px;font-weight:400;color:#888">${r.code}</span></div>
+              <div style="font-size:12px;color:#888">${r.date}｜${cnt}か所｜${r.submittedAt}提出</div>
+              ${r.note?`<div style="font-size:12px;color:#888">備考：${r.note}</div>`:''}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+              <span class="badge badge-approved">承認済み</span>
+              <button class="btn btn-sm btn-danger" onclick="deleteRec('${r.id}')">削除</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+  } else {
+    approvedEl.innerHTML = '';
+  }
+};
+
+window.approveRec = async id => await updateDoc(doc(db,'records',id),{status:'approved'});
+window.rejectRec  = async id => await updateDoc(doc(db,'records',id),{status:'rejected'});
+window.deleteRec  = async id => { if(!confirm('この実績を削除しますか？')) return; await deleteDoc(doc(db,'records',id)); };
+
+function initReport() {
+  const months = [...new Set(records.map(r=>r.rawDate?r.rawDate.slice(0,7):null).filter(Boolean))].sort().reverse();
+  const now = new Date().toISOString().slice(0,7);
+  if (!months.includes(now)) months.unshift(now);
+  document.getElementById('month-grid').innerHTML = months.slice(0,12).map(m=>
+    `<button class="month-chip ${periodFilter.monthKey===m?'active':''}" onclick="selectMonth('${m}')">${m.replace('-','年')}月</button>`).join('');
+  if (!periodFilter.from) selectMonth(now);
+  document.getElementById('filter-emp').innerHTML = '<option value="">全従業員</option>' + employees.map(e=>`<option value="${e.code}">${e.name}（${e.code}）</option>`).join('');
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('date-from').value = today.slice(0,8)+'01';
+  document.getElementById('date-to').value = today;
+  renderReport();
+}
+
+window.setPeriodMode = function(mode) {
+  ['month','range','preset'].forEach(m => {
+    document.getElementById('pt-'+m).classList.toggle('active', m===mode);
+    document.getElementById('mode-'+m).classList.toggle('hidden', m!==mode);
+  });
+};
+
+window.selectMonth = function(m) {
+  const [y,mo] = m.split('-').map(Number);
+  periodFilter = { from: new Date(y,mo-1,1).toISOString().slice(0,10), to: new Date(y,mo,0).toISOString().slice(0,10), label: m.replace('-','年')+'月', monthKey: m };
+  document.querySelectorAll('.month-chip').forEach(c => c.classList.toggle('active', c.textContent.trim()===m.replace('-','年')+'月'));
+  renderReport();
+};
+
+window.applyRange = function() {
+  const from = document.getElementById('date-from').value, to = document.getElementById('date-to').value;
+  if (!from||!to) { alert('開始日と終了日を入力してください'); return; }
+  if (from>to) { alert('開始日は終了日より前にしてください'); return; }
+  periodFilter = { from, to, label: formatDate(from)+' 〜 '+formatDate(to), monthKey: null };
+  renderReport();
+};
+
+window.applyPreset = function(key) {
+  const today = new Date(), fmt = d => d.toISOString().slice(0,10);
+  let from, to = fmt(today), label;
+  if (key==='today') { from=to; label='今日'; }
+  else if (key==='week') { const d=new Date(today); d.setDate(today.getDate()-(today.getDay()||7)+1); from=fmt(d); label='今週'; }
+  else if (key==='last7') { const d=new Date(today); d.setDate(today.getDate()-6); from=fmt(d); label='直近7日間'; }
+  else if (key==='last30') { const d=new Date(today); d.setDate(today.getDate()-29); from=fmt(d); label='直近30日間'; }
+  else if (key==='thismonth') { from=fmt(new Date(today.getFullYear(),today.getMonth(),1)); label='今月'; }
+  else if (key==='lastmonth') { const lm=new Date(today.getFullYear(),today.getMonth()-1,1); from=fmt(lm); to=fmt(new Date(today.getFullYear(),today.getMonth(),0)); label=lm.getFullYear()+'年'+(lm.getMonth()+1)+'月'; }
+  else if (key==='quarter') { const d=new Date(today); d.setMonth(today.getMonth()-3); d.setDate(d.getDate()+1); from=fmt(d); label='直近3ヶ月'; }
+  else { from=null; to=null; label='全期間'; }
+  periodFilter = { from:from||null, to:to||null, label, monthKey:null };
+  renderReport();
+};
+
+function getFilteredRecords() {
+  const emp = document.getElementById('filter-emp')?.value||'';
+  return records.filter(r => (!periodFilter.from||r.rawDate>=periodFilter.from) && (!periodFilter.to||r.rawDate<=periodFilter.to) && (!emp||String(r.code)===String(emp)));
+}
+
+window.renderReport = function renderReport() {
+  document.getElementById('active-period').textContent = '期間：'+periodFilter.label;
+  const recs = getFilteredRecords();
+  const rApproved = recs.filter(r=>r.status==='approved').length;
+  document.getElementById('report-summary').innerHTML=`
+    <div class="metric"><div class="metric-num">${recs.length}</div><div class="metric-label">提出件数</div></div>
+    <div class="metric"><div class="metric-num">${rApproved}</div><div class="metric-label">承認済み</div></div>
+    <div class="metric"><div class="metric-num">${recs.filter(r=>r.status==='pending').length}</div><div class="metric-label">承認待ち</div></div>`;
+  const empFilter = document.getElementById('filter-emp')?.value||'';
+  const displayEmps = empFilter ? employees.filter(e=>String(e.code)===String(empFilter)) : employees;
+  const maxC = Math.max(1,...displayEmps.map(e=>recs.filter(r=>String(r.code)===String(e.code)).length));
+  document.getElementById('emp-tbody').innerHTML = displayEmps.map(e => {
+    const mine = recs.filter(r=>String(r.code)===String(e.code));
+    const appC = mine.filter(r=>r.status==='approved').length;
+    const pct = mine.length?Math.round(appC/mine.length*100):0;
+    return `<tr>
+      <td><div style="font-weight:600">${e.name}</div><div style="font-size:11px;color:#888">${e.code}</div></td>
+      <td style="text-align:center">${mine.length}</td><td style="text-align:center">${appC}</td>
+      <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${mine.length?Math.round(mine.length/maxC*100):0}%"></div></div><span style="font-size:12px;min-width:32px">${pct}%</span></div></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="4" style="text-align:center;padding:16px;color:#888">データなし</td></tr>';
+  renderDailyChart(recs);
+};
+
+function renderDailyChart(recs) {
+  if (!periodFilter.from&&!periodFilter.to) { document.getElementById('daily-chart').innerHTML='<div style="font-size:12px;color:#888;padding:8px">全期間では日別グラフは表示されません</div>'; document.getElementById('daily-labels').innerHTML=''; return; }
+  const from=new Date(periodFilter.from||'2000-01-01'), to=new Date(periodFilter.to||new Date().toISOString().slice(0,10));
+  const days=Math.min(90,Math.round((to-from)/86400000)+1);
+  const dates=Array.from({length:days},(_,i)=>{const d=new Date(from);d.setDate(from.getDate()+i);return d.toISOString().slice(0,10);});
+  const counts=dates.map(dt=>recs.filter(r=>r.rawDate===dt).length);
+  const max=Math.max(1,...counts);
+  document.getElementById('daily-chart').innerHTML=counts.map(c=>{const h=Math.round(c/max*72);return`<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0">${c>0?`<div style="font-size:9px;color:#888">${c}</div>`:'<div style="font-size:9px;color:transparent">0</div>'}<div style="width:100%;height:${h}px;background:#1a1a1a;border-radius:2px 2px 0 0;${c>0?'min-height:3px':''}"></div><div style="height:${72-h}px"></div></div>`;}).join('');
+  document.getElementById('daily-labels').innerHTML=dates.map((dt,i)=>`<div style="flex:1;text-align:center;font-size:9px;color:#888;min-width:0">${(i===0||i===dates.length-1||(i+1)%7===0)?dt.slice(5):'·'}</div>`).join('');
+}
+
+window.exportCSV = function(type) {
+  const recs=getFilteredRecords(), empF=document.getElementById('filter-emp').value;
+  let csv='';
+  if (type==='summary') {
+    csv='\uFEFF名前,社員コード,提出件数,承認件数,差戻し件数,承認率\n';
+    employees.filter(e=>!empF||String(e.code)===String(empF)).forEach(e=>{
+      const mine=recs.filter(r=>String(r.code)===String(e.code));
+      const app=mine.filter(r=>r.status==='approved').length, rej=mine.filter(r=>r.status==='rejected').length;
+      csv+=`${e.name},${e.code},${mine.length},${app},${rej},${mine.length?Math.round(app/mine.length*100):0}%\n`;
+    });
+  } else {
+    // 掃除場所名のリストを作成
+    const placeNames = places.map(p=>p.name);
+    csv='\uFEFF日付,名前,社員コード,清掃か所数,清掃場所,ステータス,提出時刻,備考\n';
+    recs.forEach(r=>{
+      const checkedPlaces = places.filter(p=>r.checked&&r.checked[p.id]).map(p=>p.name).join('・');
+      const cnt=Object.values(r.checked||{}).filter(Boolean).length;
+      const st={pending:'承認待',approved:'承認済',rejected:'差戻し'}[r.status]||r.status;
+      csv+=`${r.date},${r.user},${r.code},${cnt},"${checkedPlaces}",${st},${r.submittedAt||''},"${(r.note||'').replace(/"/g,'""')}"\n`;
+    });
+  }
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`掃除実績_${type==='summary'?'従業員別集計':'実績詳細'}_${periodFilter.label}.csv`;a.click();
+  URL.revokeObjectURL(url);
+  showSaveBar('CSV出力しました');
+};
+
+function renderSettings() {
+  document.getElementById('place-list').innerHTML = !places.length ? '<div class="empty" style="padding:12px 0">場所が登録されていません</div>' :
+    places.map(p=>`<div class="card" style="margin-bottom:8px"><div class="card-row"><div><div style="font-size:15px;font-weight:600">${p.name}</div>${p.memo?`<div style="font-size:12px;color:#888">${p.memo}</div>`:''}</div><button class="btn btn-sm btn-danger" onclick="deletePlace('${p.id}')">削除</button></div></div>`).join('');
+  document.getElementById('emp-list').innerHTML = !employees.length ? '<div class="empty" style="padding:12px 0">登録なし</div>' :
+    `<div class="card">${employees.map(e=>`<div class="emp-row"><div class="emp-avatar">${e.name.charAt(0)}</div><div style="flex:1"><div style="font-size:14px;font-weight:600">${e.name}</div><div style="font-size:12px;color:#888">${e.code}｜${e.role==='admin'?'管理者':'従業員'}</div></div><button class="btn btn-sm btn-danger" onclick="deleteEmp('${e.id}')">削除</button></div>`).join('')}</div>`;
+}
+
+window.openModal  = id => document.getElementById(id).classList.remove('hidden');
+window.closeModal = id => document.getElementById(id).classList.add('hidden');
+
+window.addPlace = async function() {
+  const name = document.getElementById('new-place-name').value.trim();
+  if (!name) { alert('場所名を入力してください'); return; }
+  await addDoc(collection(db,'places'), { name, memo: document.getElementById('new-place-memo').value.trim(), order: places.length });
+  closeModal('modal-place');
+  document.getElementById('new-place-name').value=''; document.getElementById('new-place-memo').value='';
+};
+
+window.deletePlace = async id => { if (!confirm('この場所を削除しますか？')) return; await deleteDoc(doc(db,'places',id)); };
+
+window.addEmp = async function() {
+  const name = document.getElementById('new-emp-name').value.trim();
+  const code = document.getElementById('new-emp-code').value.trim();
+  const role = document.getElementById('new-emp-role').value;
+  if (!name||!code) { alert('名前と社員コードを入力してください'); return; }
+  if (employees.find(e=>String(e.code)===String(code))) { alert('その社員コードはすでに使われています'); return; }
+  await addDoc(collection(db,'employees'), { name, code, role });
+  closeModal('modal-emp');
+  document.getElementById('new-emp-name').value=''; document.getElementById('new-emp-code').value='';
+  showSaveBar('従業員を追加しました ✓');
+};
+
+window.deleteEmp = async function(id) {
+  const emp = employees.find(e=>e.id===id);
+  if (!emp||!confirm(emp.name+'を削除しますか？')) return;
+  await deleteDoc(doc(db,'employees',id));
+};
+
+function getTodayStr() { const d=new Date(); return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日'; }
+function formatDate(iso) { if(!iso)return''; const[y,m,d]=iso.split('-'); return y+'年'+parseInt(m)+'月'+parseInt(d)+'日'; }
+function showSaveBar(msg) {
+  const bar=document.getElementById('save-bar');
+  bar.textContent=msg; bar.style.background='#d4edda'; bar.style.color='#155724';
+  bar.classList.remove('hidden'); setTimeout(()=>bar.classList.add('hidden'),3000);
+}
+function scheduleAutoSave() {
+  const now=new Date(),next=new Date(); next.setHours(18,0,0,0);
+  if(now>next)next.setDate(next.getDate()+1);
+  setTimeout(()=>{ showSaveBar('本日の実績を自動保存しました（18:00）'); scheduleAutoSave(); },next-now);
+}
+
+function showAlert(el,msg,type) {
+  el.className='alert alert-'+(type==='error'?'error':'success');
+  el.textContent=msg; el.classList.remove('hidden');
+  setTimeout(()=>el.classList.add('hidden'),4000);
+}
+</script>
+</body>
+</html>

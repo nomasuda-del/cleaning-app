@@ -186,8 +186,8 @@ textarea{resize:vertical;min-height:70px}
         <div id="daily-labels" style="display:flex;gap:2px;margin-top:4px"></div>
       </div>
       <div class="csv-section">
-        <div style="font-size:14px;font-weight:700;margin-bottom:4px">CSV出力</div>
-        <div style="font-size:12px;color:#888;margin-bottom:10px">絞り込み中の期間・従業員で出力します</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px">CSV出力</div>
+        <div style="font-size:12px;color:#888;margin-bottom:10px">上の期間・従業員の絞り込みがそのまま適用されます</div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <button class="btn btn-csv" onclick="exportCSV('summary')">従業員別集計をCSV出力</button>
           <button class="btn btn-csv" onclick="exportCSV('detail')">全実績の詳細をCSV出力</button>
@@ -603,21 +603,29 @@ function renderDailyChart(recs) {
 }
 
 window.exportCSV = function(type) {
-  const recs=getFilteredRecords(), empF=document.getElementById('filter-emp').value;
+  // 期間フィルターが設定されていない場合は全期間
+  const recs = periodFilter.from || periodFilter.to ? getFilteredRecords() : records;
+  const empF = document.getElementById('filter-emp')?.value || '';
+  // placesマップを事前に作成
+  const placeMap = {};
+  places.forEach(p=>{ placeMap[p.id]=p.name; });
   let csv='';
   if (type==='summary') {
+    const targetEmps = empF ? employees.filter(e=>String(e.code)===String(empF)) : employees;
     csv='\uFEFF名前,社員コード,提出件数,承認件数,差戻し件数,承認率\n';
-    employees.filter(e=>!empF||String(e.code)===String(empF)).forEach(e=>{
+    targetEmps.forEach(e=>{
       const mine=recs.filter(r=>String(r.code)===String(e.code));
       const app=mine.filter(r=>r.status==='approved').length, rej=mine.filter(r=>r.status==='rejected').length;
       csv+=`${e.name},${e.code},${mine.length},${app},${rej},${mine.length?Math.round(app/mine.length*100):0}%\n`;
     });
   } else {
-    // 掃除場所名のリストを作成
-    const placeNames = places.map(p=>p.name);
+    const targetRecs = empF ? recs.filter(r=>String(r.code)===String(empF)) : recs;
     csv='\uFEFF日付,名前,社員コード,清掃か所数,清掃場所,ステータス,提出時刻,備考\n';
-    recs.forEach(r=>{
-      const checkedPlaces = places.filter(p=>r.checked&&r.checked[p.id]).map(p=>p.name).join('・');
+    targetRecs.forEach(r=>{
+      const checkedPlaces = Object.entries(r.checked||{})
+        .filter(([k,v])=>v===true)
+        .map(([k])=>placeMap[k]||'不明')
+        .join('・');
       const cnt=Object.values(r.checked||{}).filter(Boolean).length;
       const st={pending:'承認待',approved:'承認済',rejected:'差戻し'}[r.status]||r.status;
       csv+=`${r.date},${r.user},${r.code},${cnt},"${checkedPlaces}",${st},${r.submittedAt||''},"${(r.note||'').replace(/"/g,'""')}"\n`;

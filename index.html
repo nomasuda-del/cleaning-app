@@ -3,711 +3,3073 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>掃除実績管理</title>
+<title>川口弥平センター 受付システム</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;min-height:100vh;color:#1a1a1a}
-.app{max-width:480px;margin:0 auto;background:#fff;min-height:100vh;display:flex;flex-direction:column}
-.header{background:#fff;border-bottom:1px solid #e5e5e5;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
-.header-title{font-size:17px;font-weight:600}
-.header-sub{font-size:12px;color:#888;margin-top:2px}
-.tab-bar{display:flex;border-bottom:1px solid #e5e5e5;overflow-x:auto;background:#fff}
-.tab{flex:1;min-width:56px;padding:10px 4px;font-size:12px;color:#888;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-family:inherit}
-.tab.active{color:#1a1a1a;font-weight:600;border-bottom-color:#1a1a1a}
-.content{flex:1;padding:16px;overflow-y:auto}
-.section-title{font-size:13px;font-weight:600;color:#888;margin-bottom:8px}
-.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:14px;margin-bottom:10px}
-.card-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;white-space:nowrap}
-.badge-pending{background:#fff3cd;color:#856404}
-.badge-approved{background:#d1ecf1;color:#0c5460}
-.badge-rejected{background:#f8d7da;color:#721c24}
-.btn{padding:9px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid #ddd;background:#fff;color:#1a1a1a;transition:all .15s;font-family:inherit}
-.btn:active{transform:scale(.97)}
-.btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-.btn-sm{padding:5px 12px;font-size:13px}
-.btn-danger{border-color:#dc3545;color:#dc3545}
-.btn-csv{background:#d4edda;color:#155724;border-color:#c3e6cb;font-size:13px}
-.input-row{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.input-row label{font-size:13px;color:#555;font-weight:500}
-input,select,textarea{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:15px;background:#fff;color:#1a1a1a;font-family:inherit;outline:none}
-input:focus,select:focus,textarea:focus{border-color:#1a1a1a}
-input[type=date]{font-size:14px}
-textarea{resize:vertical;min-height:70px}
-.divider{height:1px;background:#e5e5e5;margin:16px 0}
-.empty{text-align:center;padding:40px 16px;color:#888;font-size:14px}
-.summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
-.metric{background:#f8f8f8;border-radius:10px;padding:12px;text-align:center}
-.metric-num{font-size:22px;font-weight:700;color:#1a1a1a}
-.metric-label{font-size:11px;color:#888;margin-top:2px}
-.login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:24px}
-.login-card{width:100%;max-width:360px;border:1px solid #e5e5e5;border-radius:16px;padding:28px}
-.role-switch{display:flex;gap:4px;margin-bottom:20px;background:#f0f0f0;padding:4px;border-radius:10px}
-.role-btn{flex:1;padding:12px 9px;border:none;border-radius:7px;background:transparent;color:#555;font-size:14px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s;-webkit-tap-highlight-color:rgba(0,0,0,.1);touch-action:manipulation}
-.role-btn.active{background:#fff;color:#1a1a1a;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px}
-.alert-success{background:#d4edda;color:#155724}
-.alert-error{background:#f8d7da;color:#721c24}
-.hint{font-size:12px;color:#888;margin-top:4px}
-.chk-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f0f0}
-.chk-item:last-child{border-bottom:none}
-.chk{width:24px;height:24px;border:2px solid #ddd;border-radius:6px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.chk.checked{background:#1a1a1a;border-color:#1a1a1a}
-.chk-mark{color:#fff;font-size:14px;font-weight:700}
-.emp-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0}
-.emp-row:last-child{border-bottom:none}
-.emp-avatar{width:36px;height:36px;border-radius:50%;background:#e8f0fe;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#1a73e8;flex-shrink:0}
-.report-table{width:100%;border-collapse:collapse;font-size:13px}
-.report-table th{text-align:left;padding:8px 6px;border-bottom:2px solid #e5e5e5;color:#888;font-weight:600;white-space:nowrap}
-.report-table td{padding:9px 6px;border-bottom:1px solid #f0f0f0;color:#1a1a1a}
-.report-table tr:last-child td{border-bottom:none}
-.bar-wrap{display:flex;align-items:center;gap:6px}
-.bar-bg{flex:1;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;min-width:40px}
-.bar-fill{height:100%;background:#1a1a1a;border-radius:3px}
-.period-tabs{display:flex;gap:4px;margin-bottom:12px;background:#f0f0f0;padding:4px;border-radius:10px}
-.period-tab{flex:1;padding:7px 4px;border:none;border-radius:7px;background:transparent;color:#888;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s;white-space:nowrap}
-.period-tab.active{background:#fff;color:#1a1a1a;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-.date-range-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.date-range-row input[type=date]{flex:1;font-size:13px;padding:8px 10px}
-.month-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
-.month-chip{padding:8px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#888;font-size:13px;cursor:pointer;text-align:center;font-family:inherit;font-weight:500;transition:all .15s}
-.month-chip.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-.csv-section{background:#f8f8f8;border-radius:12px;padding:16px;margin-bottom:14px}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:100}
-.modal{background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
-.modal-title{font-size:18px;font-weight:700;margin-bottom:16px}
-.hidden{display:none}
-.save-bar{font-size:13px;text-align:center;padding:8px;font-weight:500}
-.spinner{display:inline-block;width:20px;height:20px;border:2px solid #e5e5e5;border-top-color:#1a1a1a;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:8px}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* ===== RESET & BASE ===== */
+*{box-sizing:border-box;margin:0;padding:0;}
+input,select,textarea{font-size:16px!important;} /* iOS zoom防止 */
+/* iPad Safari: ボタンタップ確実化 */
+button{
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  cursor:pointer;
+  user-select:none;
+  -webkit-appearance:none;
+}
+input,select{
+  touch-action:manipulation;
+  -webkit-appearance:none;
+}
+html,body{height:100%;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:14px;background:#f5f4f0;color:#1a1a1a;}
+input,select,button,textarea{font-family:inherit;}
+
+/* ===== CSS VARS ===== */
+:root{
+  --bg:#f5f4f0;--surface:#ffffff;--surface2:#f0efe9;--border:#e0ddd5;--border2:#ccc9be;
+  --text:#1a1a1a;--text2:#666;--text3:#999;
+  --blue:#1a5fa8;--blue-bg:#e8f0fb;--blue-bd:#a8c4e8;
+  --green:#2d7a3a;--green-bg:#e8f5ea;--green-bd:#90c896;
+  --amber:#8a5c00;--amber-bg:#fdf3d8;--amber-bd:#e8c96a;
+  --red:#b02020;--red-bg:#fdeaea;--red-bd:#e89090;
+  --gray-bg:#f0efe9;--gray-bd:#ccc9be;
+  --lotte:#7a2c00;--lotte-bg:#fdf0ea;
+  --radius:8px;--radius-lg:12px;
+}
+
+/* ===== LAYOUT ===== */
+#app{display:flex;flex-direction:column;min-height:100vh;}
+.screen{flex:1;display:flex;flex-direction:column;}
+
+/* ===== APP BAR ===== */
+.app-bar{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
+}
+.app-bar-title{font-size:15px;font-weight:700;flex:1;letter-spacing:-.01em;}
+.back-btn{
+  display:flex;align-items:center;gap:4px;
+  font-size:15px;color:var(--text2);
+  background:none;border:none;
+  padding:10px 16px 10px 4px;
+  min-height:44px;
+}
+.back-btn:active{opacity:.6;}
+.bar-badge{
+  font-size:11px;font-weight:700;padding:3px 8px;
+  border-radius:999px;white-space:nowrap;
+}
+.bar-badge.alert{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd);}
+.bar-badge.ok{background:var(--green-bg);color:var(--green);}
+.bar-badge.sync{background:var(--blue-bg);color:var(--blue);}
+.bar-badge.offline{background:var(--amber-bg);color:var(--amber);}
+
+/* ===== HOME ===== */
+.home-hero{
+  padding:20px 16px 14px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.home-title{font-size:22px;font-weight:800;letter-spacing:-.02em;}
+.home-subtitle{font-size:12px;color:var(--text2);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.sync-dot.live{background:#2d7a3a;animation:pulse 2s infinite;}
+.sync-dot.offline{background:#8a5c00;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+.home-alert-bar{
+  margin:12px 16px 0;
+  padding:10px 14px;
+  background:var(--red-bg);border:1px solid var(--red-bd);border-radius:var(--radius);
+  font-size:13px;color:var(--red);font-weight:600;
+  display:none;
+}
+.home-alert-bar.show{display:block;}
+
+.menu-grid{
+  display:grid;grid-template-columns:1fr;gap:12px;
+  padding:16px;
+}
+.menu-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:16px 14px;
+  cursor:pointer;transition:border-color .15s,transform .1s;
+  display:flex;flex-direction:column;gap:5px;
+}
+.menu-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.menu-card:active{transform:scale(.98);}
+.menu-card.full{grid-column:1/-1;}
+.menu-card.lotte-card{border-color:var(--lotte);background:var(--lotte-bg);}
+.menu-card-icon{font-size:22px;line-height:1;}
+.menu-card-label{font-size:14px;font-weight:700;}
+.menu-card-sub{font-size:12px;color:var(--text2);}
+.menu-card-alert{
+  font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;
+  background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd);
+  width:fit-content;margin-top:2px;
+}
+
+/* ===== DATE NAV ===== */
+.date-nav{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.date-nav select{
+  font-size:13px;padding:5px 8px;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  background:var(--surface);color:var(--text);
+  flex:1;min-width:0;max-width:240px;
+}
+.mode-tag{
+  font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;
+}
+.mode-tag.today{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);}
+.mode-tag.past{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd);}
+.mode-tag.editing{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd);}
+
+/* ===== MOD BAR ===== */
+.mod-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;font-size:12px;
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.mod-bar.today{background:var(--green-bg);color:var(--green);}
+.mod-bar.past{background:var(--blue-bg);color:var(--blue);}
+.mod-bar.editing{background:var(--amber-bg);color:var(--amber);}
+.mod-bar-msg{flex:1;font-weight:600;}
+.toggle-edit-btn{
+  font-size:12px;padding:5px 12px;border-radius:var(--radius);
+  border:1px solid currentColor;background:var(--surface);
+  cursor:pointer;font-weight:600;white-space:nowrap;color:inherit;
+}
+
+/* ===== ALERT BAR ===== */
+.alert-bar{
+  margin:8px 14px;padding:8px 12px;
+  background:var(--red-bg);border:1px solid var(--red-bd);
+  border-radius:var(--radius);font-size:12px;color:var(--red);font-weight:600;
+}
+
+/* ===== TABLE ===== */
+.tbl-wrap{overflow-x:auto;flex:1;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;min-width:800px;table-layout:fixed;}
+thead th{
+  background:var(--surface2);padding:7px 5px;
+  font-size:11px;font-weight:700;color:var(--text2);
+  text-align:left;border-bottom:1px solid var(--border);
+  white-space:nowrap;position:sticky;top:0;z-index:10;
+}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:hover{background:var(--surface2);}
+tbody tr.row-ok{background:#e8f5ea;}
+tbody tr.row-alert{background:#fdeaea;}
+tbody tr.row-warn{background:#fdf3d8;}
+tbody tr.row-deleted{background:var(--gray-bg);opacity:.55;}
+td{padding:5px 4px;vertical-align:middle;}
+td.no-col{font-size:11px;color:var(--text3);text-align:center;width:26px;}
+
+/* ===== FORM ELEMENTS ===== */
+.t-input{
+  width:100%;font-size:16px;padding:7px 6px;
+  border:1px solid var(--border2);border-radius:6px;
+  background:var(--surface);color:var(--text);min-width:0;
+  -webkit-appearance:none;
+  touch-action:manipulation;
+}
+.t-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);}
+.t-select{
+  font-size:16px;padding:7px 4px;
+  border:1px solid var(--border2);border-radius:6px;
+  background:var(--surface);color:var(--text);width:100%;
+  -webkit-appearance:none;
+  touch-action:manipulation;
+}
+.t-input:disabled,.t-select:disabled{opacity:.45;cursor:not-allowed;}
+.time-wrap{display:flex;align-items:center;gap:4px;min-width:120px;}
+.time-inp{
+  width:62px;font-size:16px;padding:8px 4px;
+  border:1px solid var(--border2);border-radius:6px;
+  text-align:center;font-weight:600;
+  -webkit-appearance:none;
+  background:var(--surface);color:var(--text);
+  text-align:center;letter-spacing:.04em;font-weight:500;
+}
+.time-inp.err{border-color:var(--red);background:var(--red-bg);}
+.time-inp:disabled{opacity:.45;}
+.time-inp::placeholder{font-size:11px;font-weight:400;letter-spacing:0;color:#bbb;}
+.stamp-btn{
+  font-size:14px;padding:9px 10px;
+  border:1px solid var(--border2);border-radius:6px;
+  background:var(--surface2);color:var(--text2);
+  white-space:nowrap;transition:background .1s;font-weight:600;
+  min-height:40px;
+}
+.stamp-btn:active{background:var(--border);}
+.stamp-btn:hover{background:var(--border);}
+.stamp-btn.stamped{background:var(--green-bg);border-color:var(--green-bd);color:var(--green);font-weight:700;}
+.stamp-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+/* ===== DELETE BTN ===== */
+.del-btn{
+  width:36px;height:36px;border-radius:50%;
+  border:1px solid var(--red-bd);background:var(--red-bg);
+  color:var(--red);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:background .1s;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+}
+.del-btn:hover{background:#f7c1c1;}
+.del-btn:active{background:#f7c1c1;transform:scale(.92);}
+.del-btn:disabled{opacity:.3;cursor:not-allowed;}
+.restore-btn{
+  width:36px;height:36px;border-radius:50%;
+  border:1px solid var(--border2);background:var(--surface2);
+  color:var(--text2);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+}
+.restore-btn:hover{background:var(--border);}
+.restore-btn:active{transform:scale(.92);}
+
+/* ===== STATUS DOT ===== */
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px;flex-shrink:0;}
+.dot-empty{background:#ccc;}.dot-active{background:#2d7a3a;}
+.dot-warn{background:#d4a017;}.dot-alert{background:#b02020;}
+.dot-done{background:#1a7a4a;}.dot-del{background:#bbb;}
+
+/* ===== FAB AREA ===== */
+.fab-area{
+  padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;
+  background:var(--surface);border-top:1px solid var(--border);
+  position:sticky;bottom:0;z-index:20;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+}
+.fab-driver{
+  width:100%;padding:20px 16px;
+  border-radius:14px;
+  border:none;
+  background:var(--text);color:var(--surface);
+  font-size:20px;font-weight:800;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  letter-spacing:-.01em;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  user-select:none;
+  transition:opacity .1s,transform .1s;
+}
+.fab-driver:active{opacity:.85;transform:scale(.98);}
+.fab-driver:disabled{opacity:.35;transform:none;}
+.fab-driver-icon{font-size:26px;line-height:1;}
+.fab-sub-row{display:flex;gap:8px;width:100%;}
+.fab-sub{
+  flex:1;padding:12px 8px;
+  border-radius:10px;
+  border:1px solid var(--border2);background:var(--surface2);
+  font-size:13px;font-weight:700;color:var(--text2);
+  cursor:pointer;text-align:center;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  user-select:none;
+  transition:background .1s;
+}
+.fab-sub:active{background:var(--border);}
+.fab-sub:disabled{opacity:.35;}
+.fab{
+  padding:9px 16px;border-radius:var(--radius);
+  border:1px solid var(--border2);background:var(--surface);
+  font-size:13px;font-weight:700;cursor:pointer;transition:background .1s;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  user-select:none;
+}
+.fab:hover{background:var(--surface2);}
+.fab:active{transform:scale(.97);}
+.fab-primary{background:var(--text);color:var(--surface);border-color:var(--text);}
+.fab-primary:hover{opacity:.88;}
+.fab-primary:active{opacity:.85;transform:scale(.97);}
+.fab:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+/* ===== EDIT LOG ROW ===== */
+.edit-log-row td{
+  font-size:11px;color:var(--text2);
+  padding:2px 4px 5px;border-bottom:none;
+  background:transparent!important;
+}
+
+/* ===== MODAL ===== */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.45);
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;z-index:500;
+}
+.modal{
+  background:var(--surface);border-radius:var(--radius-lg);
+  border:1px solid var(--border);width:100%;max-width:460px;
+  padding:22px;max-height:90vh;overflow-y:auto;
+}
+.modal h3{font-size:17px;font-weight:800;margin-bottom:16px;letter-spacing:-.01em;}
+.modal-record{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:10px 12px;
+  margin-bottom:14px;font-size:13px;line-height:1.8;
+}
+.modal-record strong{font-weight:700;}
+.modal-body{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:4px;}
+.fg{margin-bottom:11px;}
+.fg label{font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;letter-spacing:.03em;}
+.fg input,.fg select{
+  width:100%;font-size:14px;padding:8px 10px;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  background:var(--surface);color:var(--text);
+}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-actions{display:flex;gap:8px;margin-top:18px;}
+.btn-ok{
+  flex:1;padding:11px;
+  background:var(--text);color:var(--surface);
+  border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;
+}
+.btn-ok:hover{opacity:.88;}
+.btn-danger{
+  flex:1;padding:11px;
+  background:var(--red);color:#fff;
+  border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;
+}
+.btn-cancel{
+  padding:11px 16px;background:transparent;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;
+}
+
+/* ===== HISTORY / MISC ===== */
+.list-wrap{padding:0 14px 80px;}
+.list-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:7px;cursor:pointer;transition:border-color .1s;
+}
+.list-item:hover{border-color:var(--border2);}
+.list-item-title{font-size:14px;font-weight:700;}
+.list-item-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+.list-arrow{font-size:18px;color:var(--text3);}
+
+.driver-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:11px 14px;
+  margin-bottom:8px;display:flex;align-items:center;gap:12px;
+}
+.driver-avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--blue-bg);border:1px solid var(--blue-bd);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:var(--blue);flex-shrink:0;
+}
+.export-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:14px;margin-bottom:10px;
+}
+.export-card h4{font-size:14px;font-weight:700;margin-bottom:4px;}
+.export-card p{font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6;}
+.export-btn{
+  padding:7px 14px;border:1px solid var(--border2);
+  border-radius:var(--radius);font-size:13px;font-weight:600;
+  background:var(--surface2);cursor:pointer;margin-right:6px;margin-bottom:4px;
+}
+.export-btn:hover{background:var(--border);}
+
+.section-label{
+  font-size:11px;font-weight:700;color:var(--text2);
+  padding:10px 16px 4px;letter-spacing:.06em;
+}
+.hidden{display:none!important;}
+
+/* ===== ADMIN LOGIN ===== */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:16px;}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px 28px;width:100%;max-width:340px;}
+.login-logo{font-size:32px;text-align:center;margin-bottom:8px;}
+.login-title{font-size:18px;font-weight:800;text-align:center;margin-bottom:4px;}
+.login-sub{font-size:12px;color:var(--text2);text-align:center;margin-bottom:24px;}
+.login-fg{margin-bottom:14px;}
+.login-fg label{font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;}
+.login-fg input{width:100%;font-size:15px;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);}
+.login-fg input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-bg);}
+.login-btn{width:100%;padding:12px;background:var(--text);color:var(--surface);border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+.login-btn:hover{opacity:.88;}
+.login-err{font-size:12px;color:var(--red);text-align:center;margin-top:10px;min-height:18px;}
+
+/* ===== PIN PAD ===== */
+.pin-display{
+  display:flex;justify-content:center;gap:12px;margin:16px 0;
+}
+.pin-dot{
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid var(--border2);background:transparent;
+  transition:background .15s,border-color .15s;
+}
+.pin-dot.filled{background:var(--text);border-color:var(--text);}
+.pin-dot.err{border-color:var(--red);background:var(--red);}
+.pin-pad{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+  max-width:240px;margin:0 auto;
+}
+.pin-key{
+  height:56px;border-radius:var(--radius);
+  border:1px solid var(--border2);background:var(--surface);
+  font-size:20px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .1s,transform .1s;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  color:var(--text);
+}
+.pin-key:hover{background:var(--surface2);}
+.pin-key:active{background:var(--border);transform:scale(.94);}
+.pin-key.pin-del-key{font-size:16px;color:var(--text2);}
+.pin-key.pin-zero{grid-column:2;}
+.pin-title{font-size:15px;font-weight:700;text-align:center;margin-bottom:4px;}
+.pin-sub{font-size:12px;color:var(--text2);text-align:center;margin-bottom:16px;}
+.pin-err{font-size:12px;color:var(--red);text-align:center;margin-top:8px;min-height:16px;}
+
+/* ===== TEL INPUT MODAL ===== */
+.tel-modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.55);
+  display:flex;align-items:flex-end;justify-content:center;
+  z-index:600;
+  padding:0;
+}
+.tel-modal{
+  background:var(--surface);
+  border-radius:20px 20px 0 0;
+  width:100%;max-width:520px;
+  padding:0 0 env(safe-area-inset-bottom,12px);
+  max-height:96vh;overflow-y:auto;
+}
+.tel-modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px 12px;
+  border-bottom:1px solid var(--border);
+}
+.tel-modal-title{font-size:17px;font-weight:800;letter-spacing:-.01em;}
+.tel-modal-close{
+  width:36px;height:36px;border-radius:50%;
+  border:none;background:var(--surface2);
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  color:var(--text2);
+}
+.tel-display{
+  text-align:center;
+  padding:14px 20px 10px;
+  font-size:34px;font-weight:800;
+  letter-spacing:.1em;
+  color:var(--text);
+  min-height:64px;
+  font-family:'Hiragino Sans','Noto Sans JP',monospace;
+}
+.tel-display.placeholder{color:var(--border2);font-size:22px;font-weight:400;letter-spacing:.04em;}
+.tel-lookup-result{
+  margin:0 16px 12px;
+  padding:12px 16px;
+  border-radius:var(--radius-lg);
+  font-size:14px;line-height:1.8;
+  display:none;
+}
+.tel-lookup-result.found{
+  background:var(--green-bg);border:1px solid var(--green-bd);
+  display:block;
+}
+.tel-lookup-result.notfound{
+  background:var(--surface2);border:1px solid var(--border);
+  display:block;color:var(--text2);
+}
+.tel-lookup-name{font-size:18px;font-weight:800;color:var(--green);line-height:1.3;}
+.tel-lookup-sub{font-size:13px;color:var(--text2);}
+.tel-keypad{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:8px;padding:8px 16px 16px;
+}
+.tel-key{
+  height:64px;border-radius:12px;
+  border:1px solid var(--border2);
+  background:var(--surface);
+  font-size:26px;font-weight:700;
+  cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1px;
+  transition:background .08s,transform .08s;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+  color:var(--text);
+  user-select:none;
+}
+.tel-key:active{background:var(--surface2);transform:scale(.94);}
+.tel-key-sub{font-size:9px;font-weight:400;color:var(--text3);letter-spacing:.06em;}
+.tel-key.tel-del{background:var(--surface2);color:var(--text2);font-size:20px;}
+.tel-key.tel-del:active{background:var(--border);}
+.tel-key.tel-ok{
+  background:var(--text);color:var(--surface);
+  font-size:16px;font-weight:700;border-color:var(--text);
+}
+.tel-key.tel-ok:active{opacity:.85;}
+.tel-key.tel-ok:disabled{opacity:.4;}
+.tel-fields{
+  padding:0 16px 8px;
+  display:none;
+}
+.tel-fields.show{display:block;}
+.tel-field-row{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 0;border-bottom:1px solid var(--border);
+}
+.tel-field-row:last-child{border-bottom:none;}
+.tel-field-label{font-size:12px;color:var(--text2);width:70px;flex-shrink:0;font-weight:600;}
+.tel-field-val{
+  flex:1;font-size:16px;padding:7px 10px;
+  border:1px solid var(--border2);border-radius:var(--radius);
+  background:var(--surface);color:var(--text);
+}
+.tel-confirm-btn{
+  display:block;width:calc(100% - 32px);margin:8px 16px 4px;
+  padding:16px;background:var(--text);color:var(--surface);
+  border:none;border-radius:var(--radius-lg);
+  font-size:17px;font-weight:800;cursor:pointer;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  touch-action:manipulation;
+}
+.tel-confirm-btn:active{opacity:.85;}
+.admin-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;background:#1a1a1a;color:#fff;margin-left:6px;vertical-align:middle;}
+.admin-bar{display:flex;align-items:center;gap:8px;padding:7px 14px;background:#1a1a1a;color:#fff;font-size:12px;}
+.admin-bar-msg{flex:1;font-size:11px;opacity:.8;}
+.logout-btn{font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;cursor:pointer;}
+.logout-btn:hover{background:rgba(255,255,255,.1);}
+
+/* ===== FIREBASE CONFIG NOTICE ===== */
+.config-notice{
+  margin:16px;padding:14px 16px;
+  background:var(--amber-bg);border:1px solid var(--amber-bd);
+  border-radius:var(--radius-lg);font-size:13px;line-height:1.7;
+}
+.config-notice strong{font-weight:700;display:block;margin-bottom:4px;}
+.config-notice code{
+  display:block;background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;padding:8px 10px;font-size:11px;
+  font-family:monospace;margin-top:8px;word-break:break-all;
+  color:var(--text2);
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:480px){
+  .menu-grid{grid-template-columns:1fr;}
+  .menu-card.full{grid-column:1;}
+}
+
+/* ===== WIZARD ===== */
+.wiz-screen{
+  min-height:100vh;display:flex;flex-direction:column;
+  background:var(--bg);
+}
+.wiz-header{
+  padding:14px 16px 10px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+}
+.wiz-back{
+  width:40px;height:40px;border-radius:50%;border:none;
+  background:var(--surface2);font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;
+  flex-shrink:0;color:var(--text);
+}
+.wiz-back:active{transform:scale(.92);}
+.wiz-header-info{flex:1;}
+.wiz-title{font-size:17px;font-weight:800;letter-spacing:-.01em;}
+.wiz-step-label{font-size:12px;color:var(--text2);margin-top:2px;}
+.wiz-progress{
+  height:4px;background:var(--border);
+}
+.wiz-progress-bar{
+  height:4px;background:var(--text);
+  transition:width .3s ease;
+}
+.wiz-body{
+  flex:1;padding:24px 20px 16px;
+  display:flex;flex-direction:column;gap:16px;
+  overflow-y:auto;
+}
+.wiz-section-title{
+  font-size:22px;font-weight:800;letter-spacing:-.02em;
+  line-height:1.3;
+}
+.wiz-section-sub{
+  font-size:14px;color:var(--text2);margin-top:4px;line-height:1.6;
+}
+
+/* ウィザード テンキー */
+.wiz-tel-display{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:16px 20px;
+  text-align:center;
+}
+.wiz-tel-number{
+  font-size:36px;font-weight:800;letter-spacing:.08em;
+  color:var(--text);min-height:52px;display:flex;
+  align-items:center;justify-content:center;
+}
+.wiz-tel-number.empty{color:var(--border2);font-size:22px;font-weight:400;letter-spacing:.04em;}
+.wiz-tel-hint{font-size:12px;color:var(--text2);margin-top:6px;}
+
+.wiz-keypad{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+}
+.wiz-key{
+  height:72px;border-radius:14px;
+  border:1px solid var(--border2);background:var(--surface);
+  font-size:28px;font-weight:700;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  transition:background .08s,transform .08s;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;
+  color:var(--text);user-select:none;
+}
+.wiz-key:active{background:var(--surface2);transform:scale(.93);}
+.wiz-key-sub{font-size:10px;font-weight:400;color:var(--text3);letter-spacing:.06em;}
+.wiz-key.wiz-del{background:var(--surface2);color:var(--text2);font-size:22px;}
+.wiz-key.wiz-del:active{background:var(--border);}
+
+/* ウィザード 確認カード */
+.wiz-confirm-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);overflow:hidden;
+}
+.wiz-confirm-row{
+  display:flex;align-items:center;
+  padding:14px 16px;border-bottom:1px solid var(--border);
+}
+.wiz-confirm-row:last-child{border-bottom:none;}
+.wiz-confirm-label{font-size:13px;color:var(--text2);width:80px;flex-shrink:0;font-weight:600;}
+.wiz-confirm-val{font-size:16px;font-weight:700;flex:1;}
+
+/* ウィザード フィールド */
+.wiz-field{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);overflow:hidden;
+}
+.wiz-field-row{
+  display:flex;align-items:center;padding:0 16px;
+  border-bottom:1px solid var(--border);
+}
+.wiz-field-row:last-child{border-bottom:none;}
+.wiz-field-label{font-size:13px;color:var(--text2);width:80px;flex-shrink:0;font-weight:600;padding:14px 0;}
+.wiz-field-input{
+  flex:1;font-size:17px;font-weight:500;padding:14px 8px;
+  border:none;background:transparent;color:var(--text);
+  outline:none;width:100%;
+}
+.wiz-field-input::placeholder{color:var(--border2);font-weight:400;font-size:15px;}
+.wiz-field-select{
+  flex:1;font-size:17px;font-weight:500;padding:14px 8px;
+  border:none;background:transparent;color:var(--text);
+  outline:none;width:100%;-webkit-appearance:none;
+}
+.wiz-edit-inp{
+  width:100%;font-size:20px;font-weight:700;
+  padding:16px 40px 16px 8px;
+  border:none;background:transparent;color:var(--text);
+  outline:none;
+}
+.wiz-edit-inp::placeholder{color:var(--border2);font-weight:400;font-size:16px;}
+.wiz-edit-inp:focus{background:#fffdf0;}
+
+/* ウィザード フッターボタン */
+.wiz-footer{
+  padding:12px 20px env(safe-area-inset-bottom,12px);
+  background:var(--surface);border-top:1px solid var(--border);
+}
+.wiz-next-btn{
+  width:100%;padding:20px;
+  background:var(--text);color:var(--surface);
+  border:none;border-radius:14px;
+  font-size:20px;font-weight:800;cursor:pointer;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;
+  letter-spacing:-.01em;
+  user-select:none;
+}
+.wiz-next-btn:active{opacity:.85;transform:scale(.98);}
+.wiz-next-btn:disabled{opacity:.35;transform:none;}
+.wiz-next-btn.stamp{background:var(--green);border-color:var(--green);}
+.wiz-next-btn.stamp:active{opacity:.85;}
+
+/* DB照合結果 */
+.wiz-found-card{
+  background:var(--green-bg);border:1px solid var(--green-bd);
+  border-radius:var(--radius-lg);padding:16px 18px;
+}
+.wiz-found-name{font-size:22px;font-weight:800;color:var(--green);}
+.wiz-found-sub{font-size:14px;color:var(--text2);margin-top:4px;line-height:1.7;}
+.wiz-new-badge{
+  display:inline-block;font-size:11px;font-weight:700;
+  padding:3px 9px;border-radius:999px;
+  background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd);
+  margin-bottom:8px;
+}
+
+
+/* ===== TIME INPUT MODAL ===== */
+.time-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:9998;}
+.time-modal{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:420px;padding-bottom:env(safe-area-inset-bottom,12px);}
+.time-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid #e0ddd5;}
+.time-modal-title{font-size:17px;font-weight:800;}
+.time-modal-close{width:36px;height:36px;border-radius:50%;border:none;background:#f0efe9;font-size:18px;color:#666;display:flex;align-items:center;justify-content:center;}
+.time-disp-wrap{text-align:center;padding:14px 20px 10px;border-bottom:1px solid #e0ddd5;}
+.time-disp{font-size:44px;font-weight:800;letter-spacing:.06em;color:#1a1a1a;min-height:58px;display:flex;align-items:center;justify-content:center;}
+.time-disp.empty{color:#ccc;font-size:28px;font-weight:400;}
+.time-hint{font-size:12px;color:#999;margin-top:6px;}
+.time-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 14px 4px;}
+.time-key{height:62px;border-radius:10px;border:1px solid #ccc9be;background:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.time-key:active{background:#f0efe9;}
+.time-del{background:#f0efe9;color:#666;font-size:20px;}
+.time-now-btn{display:block;width:calc(100% - 28px);margin:6px 14px 2px;padding:13px;background:#2d7a3a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;}
+.time-ok-btn{display:block;width:calc(100% - 28px);margin:4px 14px 4px;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;}
+.time-ok-btn:disabled{background:#ccc;}
+
+/* ===== ORDER INPUT MODAL ===== */
+.order-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:9999;}
+.order-modal{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:440px;padding-bottom:env(safe-area-inset-bottom,12px);}
+.order-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid #e0ddd5;}
+.order-modal-title{font-size:17px;font-weight:800;}
+.order-modal-close{width:36px;height:36px;border-radius:50%;border:none;background:#f0efe9;font-size:18px;color:#666;cursor:pointer;-webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:rgba(0,0,0,0);}
+.order-disp-wrap{text-align:center;padding:14px 20px 10px;border-bottom:1px solid #e0ddd5;min-height:70px;}
+.order-disp{font-size:28px;font-weight:800;letter-spacing:.04em;color:#1a1a1a;min-height:44px;word-break:break-all;padding:4px 8px;}
+.order-disp.empty{color:#ccc;font-size:20px;font-weight:400;}
+.order-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 14px 4px;}
+.order-key{height:62px;border-radius:10px;border:1px solid #ccc9be;background:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:rgba(0,0,0,0);cursor:pointer;-webkit-appearance:none;appearance:none;}
+.order-key:active{background:#f0efe9;}
+.order-comma{background:#e8f5ea;color:#2d7a3a;font-size:20px;}
+.order-del{background:#f0efe9;color:#666;font-size:20px;}
+.order-ok-btn{display:block;width:calc(100% - 28px);margin:6px 14px 4px;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:800;cursor:pointer;-webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:rgba(0,0,0,0);}
+.order-ok-btn:disabled{background:#ccc;}
 </style>
 </head>
 <body>
-<div class="app" id="app">
-  <!-- ログイン画面 -->
-  <div id="login-screen" style="display:flex;flex-direction:column;flex:1">
-    <div class="header"><div class="header-title">🧹 掃除実績管理</div></div>
-    <div class="login-wrap">
-      <div class="login-card">
-        <div style="font-size:36px;text-align:center;margin-bottom:10px">🧹</div>
-        <div style="font-size:20px;font-weight:700;text-align:center;margin-bottom:4px">ログイン</div>
-        <div style="font-size:13px;color:#888;text-align:center;margin-bottom:24px">名前と社員コードを入力してください</div>
-
-        <div id="login-alert" class="hidden"></div>
-        <div class="input-row">
-          <label>名前</label>
-          <input type="text" id="login-name" placeholder="例：山田 太郎">
-        </div>
-        <div class="input-row">
-          <label id="code-label">社員コード</label>
-          <input type="text" id="login-code" placeholder="例：11664" inputmode="numeric">
-          <span class="hint" id="code-hint">社員コードは管理者から受け取ってください</span>
-        </div>
-        <button class="btn btn-primary" style="width:100%;padding:12px" onclick="doLogin()" id="login-btn">ログイン</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- メイン画面 -->
-  <div id="main-screen" class="hidden" style="display:none;flex-direction:column;flex:1">
-    <div id="save-bar" class="save-bar hidden"></div>
-    <div class="header">
-      <div>
-        <div class="header-title">🧹 掃除実績管理</div>
-        <div class="header-sub" id="header-sub"></div>
-      </div>
-      <button class="btn btn-sm" onclick="doLogout()">ログアウト</button>
-    </div>
-    <div class="tab-bar">
-      <button class="tab active" onclick="showTab('input')">実績入力</button>
-      <button class="tab" onclick="showTab('history')">履歴</button>
-      <button class="tab admin-only hidden" onclick="showTab('approve')">承認</button>
-      <button class="tab admin-only hidden" onclick="showTab('report')">集計</button>
-      <button class="tab admin-only hidden" onclick="showTab('settings')">設定</button>
-    </div>
-    <div class="content" id="tab-input">
-      <div id="today-date" class="section-title" style="margin-bottom:12px"></div>
-      <div id="today-banner" class="hidden" style="background:#d4edda;color:#155724;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;font-weight:500"></div>
-      <div class="card" style="margin-bottom:14px"><div id="place-checklist"></div></div>
-      <div class="input-row"><label>備考（任意）</label><textarea id="input-note" placeholder="特記事項があれば入力"></textarea></div>
-      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="submitRecord()">実績を提出する</button>
-    </div>
-    <div class="content hidden" id="tab-history">
-      <div class="section-title" style="margin-bottom:12px">過去の実績</div>
-      <div id="history-list"></div>
-    </div>
-    <div class="content hidden" id="tab-approve">
-      <div class="summary-grid" id="approve-summary"></div>
-      <div class="section-title" style="margin-bottom:8px">承認待ち</div>
-      <div id="approve-list"></div>
-      <div id="approved-list"></div>
-    </div>
-    <div class="content hidden" id="tab-report">
-      <div class="section-title" style="margin-bottom:8px">期間指定</div>
-      <div class="period-tabs">
-        <button class="period-tab active" id="pt-month" onclick="setPeriodMode('month')">月選択</button>
-        <button class="period-tab" id="pt-range" onclick="setPeriodMode('range')">開始〜終了</button>
-        <button class="period-tab" id="pt-preset" onclick="setPeriodMode('preset')">クイック</button>
-      </div>
-      <div id="mode-month"><div class="month-grid" id="month-grid"></div></div>
-      <div id="mode-range" class="hidden">
-        <div class="date-range-row">
-          <input type="date" id="date-from"><span style="color:#888">〜</span><input type="date" id="date-to">
-        </div>
-        <button class="btn btn-primary btn-sm" style="width:100%;margin-bottom:12px" onclick="applyRange()">この期間で絞り込む</button>
-      </div>
-      <div id="mode-preset" class="hidden">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
-          <button class="btn btn-sm" onclick="applyPreset('today')">今日</button>
-          <button class="btn btn-sm" onclick="applyPreset('week')">今週</button>
-          <button class="btn btn-sm" onclick="applyPreset('last7')">直近7日間</button>
-          <button class="btn btn-sm" onclick="applyPreset('last30')">直近30日間</button>
-          <button class="btn btn-sm" onclick="applyPreset('thismonth')">今月</button>
-          <button class="btn btn-sm" onclick="applyPreset('lastmonth')">先月</button>
-          <button class="btn btn-sm" onclick="applyPreset('quarter')">直近3ヶ月</button>
-          <button class="btn btn-sm" onclick="applyPreset('all')">全期間</button>
-        </div>
-      </div>
-      <div id="active-period" style="font-size:12px;color:#888;margin-bottom:12px;padding:8px 12px;background:#f8f8f8;border-radius:8px;font-weight:500"></div>
-      <div class="input-row" style="margin-bottom:14px">
-        <label>従業員で絞り込む</label>
-        <select id="filter-emp" onchange="renderReport()">
-          <option value="">全従業員</option>
-        </select>
-      </div>
-      <div class="summary-grid" id="report-summary"></div>
-      <div class="section-title" style="margin-bottom:8px">従業員別 実績</div>
-      <div class="card" style="padding:0 14px;overflow-x:auto;margin-bottom:14px">
-        <table class="report-table"><thead><tr><th>名前</th><th>提出</th><th>承認</th><th>承認率</th></tr></thead><tbody id="emp-tbody"></tbody></table>
-      </div>
-      <div class="section-title" style="margin-bottom:8px">日別 提出件数</div>
-      <div class="card" style="padding:14px;margin-bottom:14px">
-        <div id="daily-chart" style="display:flex;align-items:flex-end;gap:2px;height:80px"></div>
-        <div id="daily-labels" style="display:flex;gap:2px;margin-top:4px"></div>
-      </div>
-      <div class="csv-section">
-        <div style="font-size:14px;font-weight:700;margin-bottom:8px">CSV出力</div>
-        <div style="font-size:12px;color:#888;margin-bottom:12px">上の期間・従業員の絞り込みがそのまま適用されます</div>
-        <div style="margin-bottom:12px;padding:10px;background:#fff;border-radius:8px;border:1px solid #e5e5e5">
-          <div style="font-size:13px;font-weight:600;margin-bottom:4px">① 従業員別集計</div>
-          <div style="font-size:12px;color:#888;margin-bottom:8px">名前・社員コード・提出件数・承認件数・差戻件数・承認率・期間</div>
-          <button class="btn btn-csv" style="width:100%" onclick="exportCSV('summary')">集計CSVを出力</button>
-        </div>
-        <div style="padding:10px;background:#fff;border-radius:8px;border:1px solid #e5e5e5">
-          <div style="font-size:13px;font-weight:600;margin-bottom:4px">② 承認済み明細</div>
-          <div style="font-size:12px;color:#888;margin-bottom:8px">名前・社員コード・日付・掃除した場所（承認済みのみ・1行1件）</div>
-          <button class="btn btn-csv" style="width:100%" onclick="exportCSV('approved')">承認済み明細CSVを出力</button>
-        </div>
-      </div>
-    </div>
-    <div class="content hidden" id="tab-settings">
-      <div class="section-title" style="margin-bottom:12px">掃除場所の管理</div>
-      <div id="place-list"></div>
-      <button class="btn" style="width:100%;margin-top:8px" onclick="openModal('modal-place')">+ 場所を追加</button>
-      <div class="divider"></div>
-      <div class="section-title" style="margin-bottom:12px">従業員の管理</div>
-      <div id="emp-list"></div>
-      <button class="btn" style="width:100%;margin-top:8px" onclick="openModal('modal-emp')">+ 従業員を追加</button>
-    </div>
-  </div>
+<div id="app">
+  <div id="root"></div>
 </div>
 
-<div id="modal-place" class="modal-overlay hidden">
-  <div class="modal">
-    <div class="modal-title">掃除場所を追加</div>
-    <div class="input-row"><label>場所名</label><input type="text" id="new-place-name" placeholder="例：トイレ（1F）"></div>
-    <div class="input-row"><label>メモ（任意）</label><input type="text" id="new-place-memo" placeholder="例：毎日必須"></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn" style="flex:1" onclick="closeModal('modal-place')">キャンセル</button>
-      <button class="btn btn-primary" style="flex:1" onclick="addPlace()">追加する</button>
-    </div>
-  </div>
-</div>
+<!-- MODAL CONTAINER (outside root for z-index) -->
+<div id="modal-container"></div>
 
-<div id="modal-emp" class="modal-overlay hidden">
-  <div class="modal">
-    <div class="modal-title">従業員を追加</div>
-    <div class="input-row"><label>名前</label><input type="text" id="new-emp-name" placeholder="例：田中 次郎"></div>
-    <div class="input-row">
-      <label>社員コード（5桁数字）</label>
-      <input type="text" id="new-emp-code" placeholder="例：00002" inputmode="numeric" maxlength="5">
-      <span class="hint">重複不可・ログイン時に使用</span>
-    </div>
-    <div class="input-row"><label>役割</label>
-      <select id="new-emp-role"><option value="staff">従業員</option><option value="admin">管理者</option></select>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn" style="flex:1" onclick="closeModal('modal-emp')">キャンセル</button>
-      <button class="btn btn-primary" style="flex:1" onclick="addEmp()">追加する</button>
-    </div>
-  </div>
-</div>
-
-<script type="module">
-// Firebase SDK（認証なし・Firestoreのみ）
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot, updateDoc, deleteDoc, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBWSeCAtV1IDQnFkT8OhL7AK5SRk14D_I0",
-  authDomain: "cleaning-afbd0.firebaseapp.com",
-  projectId: "cleaning-afbd0",
-  storageBucket: "cleaning-afbd0.firebasestorage.app",
-  messagingSenderId: "581999284320",
-  appId: "1:581999284320:web:bc82faa67cdc76064e7305"
+<script>
+// ============================================================
+//  ★ FIREBASE CONFIG ★
+//  Firebaseコンソール > プロジェクト設定 > マイアプリ から
+//  コピーしたconfigに書き換えてください
+// ============================================================
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA5wKvTnqeZ0zug5Jgmwklw7hOlR91zZYc",
+  authDomain: "kawaguchi-uketsuke.firebaseapp.com",
+  databaseURL: "https://kawaguchi-uketsuke-default-rtdb.firebaseio.com",
+  projectId: "kawaguchi-uketsuke",
+  storageBucket: "kawaguchi-uketsuke.firebasestorage.app",
+  messagingSenderId: "332721520087",
+  appId: "1:332721520087:web:4130e818983bfeffb0df92"
 };
+const FIREBASE_CONFIGURED = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
 
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
+// ============================================================
+//  CONSTANTS
+// ============================================================
+const SHAKAKU = ['2t','4t','大型','コンテナ','軽'];
+const TSUMI   = ['PL','バラ'];
+const LOTTE_SRC = ['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'];
 
-let currentEmp = null;
-let places = [], employees = [], records = [];
-let checkedToday = {}, loginRole = 'staff';
-let periodFilter = { from: null, to: null, label: '今月', monthKey: null };
-let unsubPlaces, unsubEmployees, unsubRecords;
+// ============================================================
+//  FIREBASE / LOCAL STORAGE ABSTRACTION
+// ============================================================
+let fbDb = null;
+let syncStatus = 'offline'; // 'live' | 'offline'
 
-// ===== 起動時にFirestoreから従業員データ取得 =====
-async function init() {
+function initFirebase() {
+  if (!FIREBASE_CONFIGURED) return;
+  if (typeof firebase === 'undefined') return;
   try {
-    const snap = await getDocs(collection(db, 'employees'));
-    employees = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    showLoginScreen();
+    firebase.initializeApp(FIREBASE_CONFIG);
+    
+    // 匿名認証でサインイン（セキュリティルールで auth != null の条件を満たす）
+    firebase.auth().signInAnonymously()
+      .then(function(userCred){
+        // 認証成功後にDBに接続
+        fbDb = firebase.database();
+        syncStatus = 'live';
+        render(); // UI更新（同期中表示）
+        
+        // Listen for realtime updates from Firebase
+        fbDb.ref('kawaguchi').on('value', function(snap){
+          var data = snap.val();
+          if (!data) return;
+          if (data.db) {
+            S.db = data.db;
+            ensureDay(S.db, todayKey());
+          }
+          if (data.drivers) S.drivers = data.drivers;
+          if (!S.modal) render();
+        });
+      })
+      .catch(function(err){
+        console.error('Firebase auth error:', err);
+        syncStatus = 'offline';
+        render();
+      });
   } catch(e) {
-    console.error(e);
-    // Firestoreに繋がらなくてもログイン画面を表示
-    showLoginScreen();
+    syncStatus = 'offline';
   }
 }
 
-function showLoginScreen() {
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('main-screen').style.display = 'none';
-  document.getElementById('main-screen').classList.add('hidden');
+function remoteSave() {
+  if (!fbDb) { localSave(); return; }
+  try {
+    fbDb.ref('kawaguchi').set({ db: S.db, drivers: S.drivers });
+  } catch(e) {
+    localSave();
+  }
 }
 
-init();
+function localSave() {
+  try {
+    localStorage.setItem('kw_db_v5', JSON.stringify(S.db));
+    localStorage.setItem('kw_dr_v5', JSON.stringify(S.drivers));
+  } catch(e) {}
+}
 
-// ===== ログイン =====
-window.setRole = function(r) {
-  loginRole = r;
-  const staffEl = document.getElementById('role-staff');
-  const adminEl = document.getElementById('role-admin');
-  if (r === 'staff') {
-    staffEl.style.background = '#1a1a1a';
-    staffEl.style.color = '#fff';
-    adminEl.style.background = '#fff';
-    adminEl.style.color = '#1a1a1a';
-  } else {
-    adminEl.style.background = '#1a1a1a';
-    adminEl.style.color = '#fff';
-    staffEl.style.background = '#fff';
-    staffEl.style.color = '#1a1a1a';
+function save() {
+  localSave();   // always save locally as backup
+  remoteSave();  // also push to Firebase if configured
+}
+
+function loadLocal() {
+  let db={}, drivers=[];
+  try { db = JSON.parse(localStorage.getItem('kw_db_v5')||'{}'); } catch{}
+  try { drivers = JSON.parse(localStorage.getItem('kw_dr_v5')||'[]'); } catch{}
+  return {db, drivers};
+}
+
+// ============================================================
+//  HELPERS
+// ============================================================
+function todayKey(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtKey(k){
+  const[y,m,d]=k.split('-');
+  const wd=['日','月','火','水','木','金','土'];
+  const dt=new Date(+y,+m-1,+d);
+  return `${y}年${m}月${d}日（${wd[dt.getDay()]}）`;
+}
+function nowStr(){
+  const d=new Date();
+  return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+function nowFull(){
+  const d=new Date();
+  return `${d.getMonth()+1}/${d.getDate()} ${nowStr()}`;
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+
+function mkNRow(no){ return {id:uid(),no,fuda:'',company:'',name:'',tel:'',car:'',shakaku:'2t',tsumi:'バラ',nyuuko:'',shukko:'',biko:'',deleted:false,editLog:[]}; }
+function mkLRow(no){ return {id:uid(),no,company:'',name:'',tel:'',car:'',shakaku:'2t',order:'',type:'入荷',src:'狭山工場',srcOther:'',tochaku:'',basu:'',sakuEnd:'',shuppatsu:'',deleted:false,editLog:[]}; }
+
+function ensureDay(db, key) {
+  if (!db[key]) {
+    db[key] = {
+      nyuuka: Array.from({length:20},(_,i)=>mkNRow(i+1)),
+      shukka: Array.from({length:20},(_,i)=>mkNRow(i+1)),
+      lotte:  Array.from({length:15},(_,i)=>mkLRow(i+1)),
+      created: key
+    };
   }
-  document.getElementById('code-label').textContent = r==='admin' ? '管理者コード' : '社員コード';
-  document.getElementById('code-hint').textContent = r==='admin' ? '管理者コードを入力' : '社員コードは管理者から受け取ってください';
-  document.getElementById('login-code').placeholder = r==='admin' ? '例：11664' : '例：00001';
+  // Ensure arrays exist (for older data)
+  ['nyuuka','shukka'].forEach(t=>{ if(!db[key][t]) db[key][t]=Array.from({length:20},(_,i)=>mkNRow(i+1)); });
+  if (!db[key].lotte) db[key].lotte = Array.from({length:15},(_,i)=>mkLRow(i+1));
+  return db[key];
+}
+
+// ============================================================
+//  STATE
+// ============================================================
+const {db: initDb, drivers: initDrivers} = loadLocal();
+// ===== ADMIN AUTH =====
+const DEFAULT_ADMIN_PASS = "kawaguchi2024";
+const SESSION_KEY = "kw_admin_session";
+const PIN_STORAGE_KEY = "kw_delete_pin";
+const ADMIN_PW_STORAGE_KEY = "kw_admin_pw";
+
+function getAdminPass(){
+  return localStorage.getItem(ADMIN_PW_STORAGE_KEY) || DEFAULT_ADMIN_PASS;
+}
+function getDeletePin(){
+  return localStorage.getItem(PIN_STORAGE_KEY) || null; // null = PIN未設定
+}
+function setDeletePin(pin){
+  if(pin) localStorage.setItem(PIN_STORAGE_KEY, pin);
+  else localStorage.removeItem(PIN_STORAGE_KEY);
+}
+function setAdminPass(pw){
+  if(pw) localStorage.setItem(ADMIN_PW_STORAGE_KEY, pw);
+}
+function isAdminLoggedIn(){
+  return sessionStorage.getItem(SESSION_KEY) === "1";
+}
+function adminLogin(pass){
+  if(pass === getAdminPass()){ sessionStorage.setItem(SESSION_KEY,"1"); return true; }
+  return false;
+}
+function adminLogout(){
+  sessionStorage.removeItem(SESSION_KEY);
+  S.screen = "home";
+  render();
+}
+
+// ===== WIZARD STATE =====
+const WIZ = {
+  active: false,
+  type: 'nyuuka', // nyuuka | shukka | lotte
+  step: 'tel',
+  tel: '',
+  company: '',
+  name: '',
+  car: '',
+  shakaku: '',
+  tsumi: '',
+  fuda: '',
+  biko: '',
+  // lotte専用
+  order: '',
+  orderIn: '',
+  orderOut: '',
+  nyukaType: '',
+  src: '',
+  srcOther: '',
+  srcIn: '',
+  srcInOther: '',
+  driver: null,
+  isNew: false,
+  consent: false,
 };
 
-window.doLogin = async function() {
-  const name = document.getElementById('login-name').value.trim();
-  const code = document.getElementById('login-code').value.trim();
-  const al = document.getElementById('login-alert');
-  if (!name || !code) { showAlert(al, '名前と社員コードを入力してください', 'error'); return; }
+const S = {
+  screen: 'home',
+  viewDate: todayKey(),
+  editMode: false,
+  modal: null,
+  modalData: {},
+  alertWarn: 60,
+  alertDanger: 90,
+  db: initDb,
+  drivers: initDrivers,
+};
+ensureDay(S.db, todayKey());
+localSave();
 
-  const btn = document.getElementById('login-btn');
-  btn.innerHTML = '<span class="spinner"></span>確認中...';
-  btn.disabled = true;
+// ============================================================
+//  STATUS LOGIC
+// ============================================================
+function toMin(t){if(!t)return null;const[h,m]=t.split(':').map(Number);return h*60+m;}
+function elapsed(t){if(!t)return null;const b=toMin(t);const n=new Date();return n.getHours()*60+n.getMinutes()-b;}
+function timeOk(a,b){if(!a||!b)return true;return toMin(a)<=toMin(b);}
 
-  try {
-    const snap = await getDocs(collection(db, 'employees'));
-    employees = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    // 役割に関係なく名前とコードで照合
-    const emp = employees.find(e => e.name === name && String(e.code) === String(code));
-    if (!emp) {
-      showAlert(al, '名前または社員コードが正しくありません', 'error');
-      btn.innerHTML = 'ログイン'; btn.disabled = false;
-      return;
+function rowStatus(r,type){
+  if(r.deleted)return 'deleted';
+  if(type==='lotte'){
+    const times=[r.tochaku,r.basu,r.sakuEnd,r.shuppatsu];
+    const hasAny=times.some(Boolean)||r.company;
+    if(!hasAny)return 'empty';
+    for(let i=1;i<times.length;i++){
+      if(times[i-1]&&times[i]&&toMin(times[i-1])>toMin(times[i]))return 'alert';
     }
-    currentEmp = emp;
-    checkedToday = {};
-    startApp();
-  } catch(e) {
-    showAlert(al, 'サーバーに接続できません。通信環境を確認してください。', 'error');
-    btn.innerHTML = 'ログイン'; btn.disabled = false;
+    if(r.shuppatsu)return 'done';
+    if(r.tochaku){const e=elapsed(r.tochaku);if(e>=S.alertDanger)return 'alert';if(e>=S.alertWarn)return 'warn';}
+    return hasAny?'active':'empty';
   }
-};
-
-window.doLogout = function() {
-  if (unsubPlaces) unsubPlaces();
-  if (unsubEmployees) unsubEmployees();
-  if (unsubRecords) unsubRecords();
-  currentEmp = null;
-  document.getElementById('login-name').value = '';
-  document.getElementById('login-code').value = '';
-  document.getElementById('login-btn').innerHTML = 'ログイン';
-  document.getElementById('login-btn').disabled = false;
-  document.getElementById('main-screen').style.display = 'none';
-  document.getElementById('main-screen').classList.add('hidden');
-  document.getElementById('login-screen').style.display = 'flex';
-};
-
-function startApp() {
-  document.getElementById('login-screen').style.display = 'none';
-  const ms = document.getElementById('main-screen');
-  ms.classList.remove('hidden');
-  ms.style.display = 'flex';
-  document.getElementById('header-sub').textContent = currentEmp.name + '（' + (currentEmp.role==='admin'?'管理者':'従業員') + '・' + currentEmp.code + '）';
-  document.querySelectorAll('.admin-only').forEach(t => t.classList.toggle('hidden', currentEmp.role !== 'admin'));
-  subscribeData();
-  showTab('input');
-  scheduleAutoSave();
+  if(!r.company&&!r.nyuuko)return 'empty';
+  if(r.nyuuko&&r.shukko){if(!timeOk(r.nyuuko,r.shukko))return 'alert';return 'done';}
+  if(r.nyuuko){const e=elapsed(r.nyuuko);if(e>=S.alertDanger)return 'alert';if(e>=S.alertWarn)return 'warn';}
+  return r.company?'active':'empty';
 }
-
-function subscribeData() {
-  unsubPlaces = onSnapshot(collection(db, 'places'), snap => {
-    places = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b)=>(a.order||0)-(b.order||0));
-    if (!document.getElementById('tab-input').classList.contains('hidden')) renderChecklist();
-    if (!document.getElementById('tab-settings').classList.contains('hidden')) renderSettings();
-  });
-  unsubEmployees = onSnapshot(collection(db, 'employees'), snap => {
-    employees = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (!document.getElementById('tab-settings').classList.contains('hidden')) renderSettings();
-  });
-  unsubRecords = onSnapshot(collection(db, 'records'), snap => {
-    records = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.rawDate||'').localeCompare(a.rawDate||''));
-    renderHistory();
-    renderApprove();
-    if (!document.getElementById('tab-report').classList.contains('hidden')) renderReport();
-    checkTodayBanner();
-  });
+function dotCls(st){
+  return 'dot dot-'+({empty:'empty',active:'active',warn:'warn',alert:'alert',done:'done',deleted:'del'}[st]||'empty');
 }
-
-window.showTab = function(name) {
-  ['input','history','approve','report','settings'].forEach(t => document.getElementById('tab-'+t).classList.add('hidden'));
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['input','history','approve','report','settings'][i]===name));
-  document.getElementById('tab-'+name).classList.remove('hidden');
-  if (name==='input') renderChecklist();
-  if (name==='history') renderHistory();
-  if (name==='approve') renderApprove();
-  if (name==='report') initReport();
-  if (name==='settings') renderSettings();
-};
-
-function renderChecklist() {
-  document.getElementById('today-date').textContent = getTodayStr() + '（本日）';
-  checkTodayBanner();
-  const cl = document.getElementById('place-checklist');
-  if (!places.length) { cl.innerHTML='<div class="empty">掃除場所が登録されていません</div>'; return; }
-  cl.innerHTML = places.map(p => `
-    <div class="chk-item">
-      <div class="chk ${checkedToday[p.id]?'checked':''}" onclick="toggleCheck('${p.id}')">
-        ${checkedToday[p.id]?'<span class="chk-mark">✓</span>':''}
-      </div>
-      <div style="flex:1">
-        <div style="font-size:15px;font-weight:500">${p.name}</div>
-        ${p.memo?`<div style="font-size:12px;color:#888">${p.memo}</div>`:''}
-      </div>
-    </div>`).join('');
+function rowCls(st){
+  return ({alert:'row-alert',warn:'row-warn',done:'row-ok',deleted:'row-deleted'}[st]||'');
 }
+function findDriver(tel){const t=(tel||'').replace(/[-\s]/g,'');return S.drivers.find(d=>d.tel===t);}
+function allDates(){return Object.keys(S.db).filter(k=>k.match(/^\d{4}-\d{2}-\d{2}$/)).sort().reverse();}
+function isToday(){return S.viewDate===todayKey();}
+function canEdit(){return isToday()||S.editMode;}
+function todayData(){return S.db[todayKey()];}
+function viewed(){return S.db[S.viewDate]||ensureDay(S.db,S.viewDate);}
 
-function checkTodayBanner() {
-  const today = new Date().toISOString().slice(0,10);
-  const myRec = records.find(r => r.rawDate===today && String(r.code)===String(currentEmp.code));
-  const banner = document.getElementById('today-banner');
-  if (myRec) {
-    const s = {pending:'承認待ち',approved:'承認済み',rejected:'差し戻し'}[myRec.status]||myRec.status;
-    banner.textContent = `本日 ${myRec.submittedAt} に提出済み（${s}）`;
-    banner.classList.remove('hidden');
-  } else { banner.classList.add('hidden'); }
-}
+// ============================================================
+//  RENDER ENGINE
+// ============================================================
+const root = document.getElementById('root');
+const modalContainer = document.getElementById('modal-container');
 
-window.toggleCheck = function(id) { checkedToday[id]=!checkedToday[id]; renderChecklist(); };
-
-window.submitRecord = async function() {
-  const done = Object.values(checkedToday).filter(Boolean).length;
-  if (!done) { alert('少なくとも1か所チェックしてください'); return; }
-  const today = getTodayStr(), rawDate = new Date().toISOString().slice(0,10);
-  // 本日のみ上書き確認（過去のデータは消さない）
-  const existing = records.find(r => r.rawDate===rawDate && String(r.code)===String(currentEmp.code));
-  if (existing) {
-    if (!confirm('本日はすでに提出済みです。上書きしますか？\n※今日の実績のみ更新されます')) return;
-    await deleteDoc(doc(db,'records',existing.id));
+function render(){
+  modalContainer.innerHTML = '';
+  if(WIZ.active){ renderWizard(); return; }
+  if(S.modal){ renderModal(); return; }
+  root.innerHTML = '';
+  const adminRequired = ['drivers','history','export'];
+  if(adminRequired.includes(S.screen) && !isAdminLoggedIn()){
+    renderAdminLogin(S.screen);
+    return;
   }
-  await addDoc(collection(db,'records'), {
-    date: today, rawDate, user: currentEmp.name, code: currentEmp.code,
-    checked: {...checkedToday}, note: document.getElementById('input-note').value,
-    status: 'pending', submittedAt: new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}),
-    createdAt: serverTimestamp()
-  });
-  document.getElementById('input-note').value=''; checkedToday={};
-  showSaveBar('実績を提出しました ✓'); renderChecklist();
-};
-
-function renderHistory() {
-  const list = document.getElementById('history-list');
-  const mine = currentEmp.role==='admin' ? records : records.filter(r=>String(r.code)===String(currentEmp.code));
-  if (!mine.length) { list.innerHTML='<div class="empty">実績がありません</div>'; return; }
-  const sL={pending:'承認待',approved:'承認済',rejected:'差戻し'};
-  const bC={pending:'badge-pending',approved:'badge-approved',rejected:'badge-rejected'};
-  list.innerHTML = mine.map(r => {
-    const cnt = Object.values(r.checked||{}).filter(Boolean).length;
-    return `<div class="card"><div class="card-row">
-      <div>
-        <div style="font-size:15px;font-weight:600">${r.date}</div>
-        <div style="font-size:12px;color:#888">${r.user}（${r.code}）｜${cnt}か所｜${r.submittedAt}提出</div>
-        ${r.note?`<div style="font-size:12px;color:#888">備考：${r.note}</div>`:''}
-      </div>
-      <span class="badge ${bC[r.status]||''}">${sL[r.status]||r.status}</span>
-    </div></div>`;
-  }).join('');
+  if(S.screen==='home')       renderHome();
+  else if(S.screen==='nyuuka') renderTable('nyuuka');
+  else if(S.screen==='shukka') renderTable('shukka');
+  else if(S.screen==='lotte')  renderLotte();
+  else if(S.screen==='drivers') renderDrivers();
+  else if(S.screen==='history') renderHistory();
+  else if(S.screen==='export')  renderExport();
 }
 
-window.renderApprove = function renderApprove() {
-  const pending = records.filter(r=>r.status==='pending');
-  const approvedRecs = records.filter(r=>r.status==='approved');
-  document.getElementById('approve-summary').innerHTML=`
-    <div class="metric"><div class="metric-num">${records.length}</div><div class="metric-label">総実績</div></div>
-    <div class="metric"><div class="metric-num">${pending.length}</div><div class="metric-label">承認待ち</div></div>
-    <div class="metric"><div class="metric-num">${approvedRecs.length}</div><div class="metric-label">承認済み</div></div>`;
-  const list = document.getElementById('approve-list');
-  list.innerHTML = pending.length ? pending.map(r => {
-    const cnt = Object.values(r.checked||{}).filter(Boolean).length;
-    return `<div class="card">
-      <div class="card-row" style="margin-bottom:10px">
+function renderAdminLogin(destScreen){
+  root.innerHTML = `
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">🔐</div>
+      <div class="login-title">管理者ログイン</div>
+      <div class="login-sub">管理者パスワードを入力してください</div>
+      <div class="login-fg">
+        <label>パスワード</label>
+        <input type="password" id="admin-pw-input" placeholder="管理者パスワードを入力"
+          onkeydown="if(event.key==='Enter')doAdminLogin('${destScreen}')">
+      </div>
+      <button class="login-btn" onclick="doAdminLogin('${destScreen}')">ログイン</button>
+      <div class="login-err" id="admin-err"></div>
+      <div style="text-align:center;margin-top:16px;">
+        <button class="back-btn" onclick="go('home')" style="font-size:13px;color:var(--text2);">← ホームに戻る</button>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>document.getElementById('admin-pw-input')?.focus(), 50);
+}
+
+function doAdminLogin(destScreen){
+  const pw = document.getElementById('admin-pw-input')?.value || '';
+  if(adminLogin(pw)){
+    S.screen = 'home'; // ログイン後はホームに戻してメニューを表示
+    render();
+  } else {
+    document.getElementById('admin-err').textContent = 'パスワードが違います';
+    document.getElementById('admin-pw-input').value = '';
+    document.getElementById('admin-pw-input').focus();
+  }
+}
+
+function go(sc){ S.screen=sc; S.editMode=false; render(); }
+function e(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ---------- HOME ----------
+function renderHome(){
+  const tk=todayKey();
+  const td=todayData()||ensureDay(S.db,tk);
+  const alertN=td.nyuuka.filter(r=>rowStatus(r,'nyuuka')==='alert').length;
+  const alertS=td.shukka.filter(r=>rowStatus(r,'shukka')==='alert').length;
+  const alertL=td.lotte.filter(r=>rowStatus(r,'lotte')==='alert').length;
+  const total=alertN+alertS+alertL;
+  const actN=td.nyuuka.filter(r=>['active','warn','alert'].includes(rowStatus(r,'nyuuka'))).length;
+  const actS=td.shukka.filter(r=>['active','warn','alert'].includes(rowStatus(r,'shukka'))).length;
+  const actL=td.lotte.filter(r=>['active','warn','alert'].includes(rowStatus(r,'lotte'))).length;
+  const syncLabel=syncStatus==='live'?'リアルタイム同期中':'オフライン（ローカル保存）';
+  const syncCls=syncStatus==='live'?'sync':'offline';
+  const isAdm=isAdminLoggedIn();
+
+  root.innerHTML=`
+  <div class="app-bar">
+    <div class="app-bar-title">川口弥平センター</div>
+    <span class="bar-badge ${syncCls}">${syncLabel}</span>
+  </div>
+  ${isAdm?`<div class="admin-bar">
+    <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
+  </div>`:''}
+  <div class="home-hero">
+    <div class="home-title">${fmtKey(tk)}</div>
+    <div class="home-subtitle">受付管理システム${total>0?` &nbsp;<span style="color:var(--red);font-weight:700;">⚠ 要対応 ${total}件</span>`:''}</div>
+  </div>
+  ${total>0?`<div class="home-alert-bar show">⚠ 要対応: 入荷 ${alertN}件 ／ 出荷 ${alertS}件 ／ ロッテ ${alertL}件</div>`:''}
+
+  <div class="menu-grid">
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('nyuuka')">
+      <div class="menu-card-icon">📥</div>
+      <div class="menu-card-label">入荷受付</div>
+      <div class="menu-card-sub">作業中 ${actN}件</div>
+      ${alertN>0?`<div class="menu-card-alert">要対応 ${alertN}件</div>`:''}
+    </div>
+    <div class="menu-card" onclick="S.viewDate='${tk}';S.editMode=false;go('shukka')">
+      <div class="menu-card-icon">📤</div>
+      <div class="menu-card-label">出荷受付</div>
+      <div class="menu-card-sub">作業中 ${actS}件</div>
+      ${alertS>0?`<div class="menu-card-alert">要対応 ${alertS}件</div>`:''}
+    </div>
+    <div class="menu-card lotte-card" onclick="S.viewDate='${tk}';S.editMode=false;go('lotte')">
+      <div class="menu-card-icon">⭐</div>
+      <div class="menu-card-label">ロッテ様専用受付</div>
+      <div class="menu-card-sub">作業中 ${actL}件${alertL>0?` &nbsp;<span style="color:var(--lotte);font-weight:700;">要対応 ${alertL}件</span>`:''}</div>
+    </div>
+
+    ${isAdm?`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div class="menu-card" onclick="go('history')" style="min-height:80px;padding:14px;gap:6px;">
+        <div style="font-size:22px;">📅</div>
+        <div style="font-size:13px;font-weight:700;">過去データ</div>
+        <div style="font-size:11px;color:var(--text2);">${allDates().length}日分</div>
+      </div>
+      <div class="menu-card" onclick="go('drivers')" style="min-height:80px;padding:14px;gap:6px;">
+        <div style="font-size:22px;">👤</div>
+        <div style="font-size:13px;font-weight:700;">ドライバーDB</div>
+        <div style="font-size:11px;color:var(--text2);">${S.drivers.length}名</div>
+      </div>
+      <div class="menu-card" onclick="go('export')" style="min-height:80px;padding:14px;gap:6px;">
+        <div style="font-size:22px;">📄</div>
+        <div style="font-size:13px;font-weight:700;">データ出力</div>
+        <div style="font-size:11px;color:var(--text2);">CSV / 印刷</div>
+      </div>
+    </div>
+    <div class="section-label">アラート設定（入庫後の経過時間）</div>
+    <div style="display:flex;align-items:center;gap:10px;padding:0 0 16px;flex-wrap:wrap;font-size:12px;color:var(--text2);">
+      警告（黄） <input type="number" value="${S.alertWarn}" min="10" max="480"
+        style="width:52px;font-size:13px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;"
+        onchange="S.alertWarn=+this.value"> 分 &nbsp;&nbsp;
+      アラート（赤） <input type="number" value="${S.alertDanger}" min="10" max="480"
+        style="width:52px;font-size:13px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;"
+        onchange="S.alertDanger=+this.value"> 分
+    </div>
+    `:`
+    <div class="menu-card" onclick="go('history')"
+      style="min-height:auto;padding:10px 16px;background:var(--surface2);border-style:dashed;flex-direction:row;align-items:center;gap:10px;">
+      <span style="font-size:16px;">🔑</span>
+      <span style="font-size:13px;font-weight:600;color:var(--text2);">管理者ログイン</span>
+    </div>
+    `}
+  </div>`;
+}
+
+
+// ---------- DATE NAV & MOD BAR ----------
+function dateNavHtml(label){
+  const dates=allDates();
+  const opts=dates.map(k=>`<option value="${k}"${k===S.viewDate?' selected':''}>${fmtKey(k)}${k===todayKey()?' 【本日】':''}</option>`).join('');
+  const tagCls=isToday()?'today':S.editMode?'editing':'past';
+  const tagLabel=isToday()?'本日':S.editMode?'修正モード':'閲覧中';
+  return `<div class="date-nav">
+    <select onchange="S.viewDate=this.value;S.editMode=false;render();">${opts}</select>
+    <span class="mode-tag ${tagCls}">${tagLabel}</span>
+  </div>`;
+}
+function modBarHtml(){
+  if(isToday()) return `<div class="mod-bar today"><span class="mod-bar-msg">✓ 本日のデータを編集中</span></div>`;
+  if(S.editMode) return `<div class="mod-bar editing"><span class="mod-bar-msg">✎ 後日修正モード — 変更は修正記録に残ります</span><button class="toggle-edit-btn" onclick="S.editMode=false;render();">修正を終了</button></div>`;
+  return `<div class="mod-bar past"><span class="mod-bar-msg">閲覧のみ（読み取り専用）</span><button class="toggle-edit-btn" onclick="S.editMode=true;render();">後日修正を行う</button></div>`;
+}
+
+// ---------- TABLE (入荷/出荷) ----------
+function renderTable(type){
+  const day=viewed();
+  const arr=day[type];
+  const ed=canEdit();
+  const label=type==='nyuuka'?'入荷受付':'出荷受付';
+  const alertRows=arr.filter(r=>rowStatus(r,type)==='alert');
+  let html=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">${label}</div>
+    ${syncStatus==='live'?'<span class="bar-badge sync">同期中</span>':'<span class="bar-badge offline">オフライン</span>'}
+  </div>
+  ${dateNavHtml(label)}
+  ${modBarHtml()}
+  ${alertRows.length>0&&ed?`<div class="alert-bar">⚠ 要対応: ${alertRows.map(r=>`No.${r.no} ${e(r.company||'')}`).join('、')}</div>`:''}
+  <div class="tbl-wrap"><table>
+  <thead><tr>
+    <th style="width:34px;"></th>
+    <th style="width:32px;">No</th>
+    <th style="width:40px;">札</th>
+    <th style="min-width:130px;">運送会社名</th>
+    <th style="min-width:65px;">氏名</th>
+    <th style="min-width:140px;">電話番号</th>
+    <th style="width:60px;">車番</th>
+    <th style="width:68px;">車格</th>
+    <th style="width:56px;">積み方</th>
+    <th style="min-width:74px;">メーカー名</th>
+    <th style="min-width:104px;">入庫時間</th>
+    <th style="min-width:104px;">出庫時間</th>
+  </tr></thead><tbody>`;
+
+  arr.forEach(r=>{
+    const st=rowStatus(r,type);
+    const isDel=r.deleted;
+    const dis=!ed||isDel;
+    const tErr=r.nyuuko&&r.shukko&&!timeOk(r.nyuuko,r.shukko)?'err':'';
+    const hasLog=r.editLog&&r.editLog.length>0;
+    html+=`<tr class="${rowCls(st)}">
+      <td style="text-align:center;padding:4px 2px;">
+        ${isDel
+          ?`<button class="restore-btn" title="削除を取り消す" onpointerup="confirmRestore('${type}','${r.id}')" onclick="confirmRestore('${type}','${r.id}')">↩</button>`
+          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onpointerup="confirmDelete('${type}','${r.id}')" onclick="confirmDelete('${type}','${r.id}')">×</button>`
+        }
+      </td>
+      <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
+      <td><input class="t-input" style="width:36px;" type="number" value="${r.fuda||''}" ${dis?'disabled':''} placeholder="―" oninput="upd('${type}','${r.id}','fuda',this.value)"></td>
+      <td><input class="t-input" style="min-width:98px;" type="text" value="${e(r.company||'')}" ${dis?'disabled':''} placeholder="運送会社名" oninput="upd('${type}','${r.id}','company',this.value)"></td>
+      <td><input class="t-input" type="text" value="${e(r.name||'')}" ${dis?'disabled':''} placeholder="氏名" oninput="upd('${type}','${r.id}','name',this.value)"></td>
+      <td>
+        ${dis
+          ? `<span style="font-size:13px;color:var(--text2);">${e(r.tel||'―')}</span>`
+          : `<div style="display:flex;gap:3px;align-items:center;">
+              <input class="tel-inp" type="tel" inputmode="numeric" value="${e(r.tel||'')}" placeholder="電話番号" oninput="upd('${type}','${r.id}','tel',this.value)">
+              <button type="button" class="tel-btn" onclick="openTelModal('${type}','${r.id}')">テン<br>キー</button>
+            </div>`
+        }
+      </td>
+      <td><input class="t-input" style="width:54px;" type="text" value="${e(r.car||'')}" ${dis?'disabled':''} oninput="upd('${type}','${r.id}','car',this.value)"></td>
+      <td><select class="t-select" style="width:62px;" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','shakaku',this.value)">${SHAKAKU.map(s=>`<option${r.shakaku===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td><select class="t-select" style="width:50px;" ${dis?'disabled':''} onchange="upd('${type}','${r.id}','tsumi',this.value)">${TSUMI.map(s=>`<option${r.tsumi===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td><input class="t-input" style="min-width:64px;" type="text" value="${e(r.biko||'')}" ${dis?'disabled':''} placeholder="メーカー名" oninput="upd('${type}','${r.id}','biko',this.value)"></td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${r.nyuuko?'done':''}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.nyuuko||''}" ${dis?'disabled':''} onblur="handleTimeInput('${type}','${r.id}','nyuuko',this.value);render()">
+        <button class="stamp-btn${r.nyuuko?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('${type}','${r.id}','nyuuko')" title="現在時刻で打刻">今</button>
+      </div></td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${r.shukko?'done':''} ${tErr?'err':''}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.shukko||''}" ${dis?'disabled':''} onblur="handleTimeInput('${type}','${r.id}','shukko',this.value);render()">
+        <button class="stamp-btn${r.shukko?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('${type}','${r.id}','shukko')" title="現在時刻で打刻">今</button>
+      </div></td>
+    </tr>
+    ${hasLog?`<tr class="edit-log-row"><td colspan="12">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
+  });
+  html+=`</tbody></table></div>
+  <div class="fab-area">
+    <button class="fab-driver" ${!isToday()?'disabled':''}
+      onpointerup="if(!this.disabled){startWizard('${type}')}"
+      onclick="if(!this.disabled){startWizard('${type}')}">
+      <span class="fab-driver-icon">📋</span>
+      <span>ドライバー受付 ／ 新規登録</span>
+    </button>
+    <div class="fab-sub-row">
+      ${ed&&isToday()?`
+      <button class="fab-sub"
+        onpointerup="addRows('${type}')"
+        onclick="addRows('${type}')">＋ 行を追加</button>`:''}
+    </div>
+  </div>`;
+  root.innerHTML=html;
+}
+
+// ---------- LOTTE ----------
+function renderLotte(){
+  const day=viewed();
+  const arr=day.lotte;
+  const ed=canEdit();
+  const alertRows=arr.filter(r=>rowStatus(r,'lotte')==='alert');
+  let html=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">ロッテ様専用受付</div>
+    ${syncStatus==='live'?'<span class="bar-badge sync">同期中</span>':'<span class="bar-badge offline">オフライン</span>'}
+  </div>
+  ${dateNavHtml('ロッテ様')}
+  ${modBarHtml()}
+  ${alertRows.length>0&&ed?`<div class="alert-bar">⚠ 時間逆転または長時間滞留: ${alertRows.map(r=>`No.${r.no}`).join('、')}</div>`:''}
+  <div class="tbl-wrap"><table>
+  <thead><tr>
+    <th style="width:34px;"></th>
+    <th style="width:32px;">No</th>
+    <th style="min-width:130px;">運送会社名</th>
+    <th style="min-width:65px;">氏名</th>
+    <th style="min-width:140px;">電話番号</th>
+    <th style="width:60px;">車番</th>
+    <th style="width:68px;">車格</th>
+    <th style="width:80px;">オーダーNo</th>
+    <th style="width:60px;">入/出荷</th>
+    <th style="min-width:112px;">入荷元/出荷先</th>
+    <th style="min-width:104px;">到着時間</th>
+    <th style="min-width:104px;">バース着車</th>
+    <th style="min-width:104px;">作業終了</th>
+    <th style="min-width:104px;">出発時間</th>
+  </tr></thead><tbody>`;
+
+  arr.forEach(r=>{
+    const st=rowStatus(r,'lotte');
+    const isDel=r.deleted;
+    const dis=!ed||isDel;
+    const tC=(a,b)=>a&&b&&toMin(a)>toMin(b)?'err':'';
+    const hasLog=r.editLog&&r.editLog.length>0;
+    html+=`<tr class="${rowCls(st)}">
+      <td style="text-align:center;padding:4px 2px;">
+        ${isDel
+          ?`<button class="restore-btn" title="削除を取り消す" onpointerup="confirmRestore('lotte','${r.id}')" onclick="confirmRestore('lotte','${r.id}')">↩</button>`
+          :`<button class="del-btn" title="削除" ${!ed?'disabled':''} onpointerup="confirmDelete('lotte','${r.id}')" onclick="confirmDelete('lotte','${r.id}')">×</button>`
+        }
+      </td>
+      <td class="no-col"><span class="${dotCls(st)}"></span>${r.no}</td>
+      <td><input class="t-input" style="min-width:94px;" type="text" value="${e(r.company||'')}" ${dis?'disabled':''} placeholder="会社名" oninput="upd('lotte','${r.id}','company',this.value)"></td>
+      <td><input class="t-input" type="text" value="${e(r.name||'')}" ${dis?'disabled':''} placeholder="氏名" oninput="upd('lotte','${r.id}','name',this.value)"></td>
+      <td>
+        ${dis
+          ? `<span style="font-size:13px;color:var(--text2);">${e(r.tel||'―')}</span>`
+          : `<div style="display:flex;gap:3px;align-items:center;">
+              <input class="tel-inp" type="tel" inputmode="numeric" value="${e(r.tel||'')}" placeholder="電話番号" oninput="upd('lotte','${r.id}','tel',this.value)">
+              <button type="button" class="tel-btn" onclick="openTelModal('lotte','${r.id}')">テン<br>キー</button>
+            </div>`
+        }
+      </td>
+      <td><input class="t-input" style="width:44px;" type="text" value="${e(r.car||'')}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','car',this.value)"></td>
+      <td><select class="t-select" style="width:62px;" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','shakaku',this.value)">${SHAKAKU.map(s=>`<option${r.shakaku===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td><input class="t-input" style="width:66px;" type="text" value="${e(r.order||'')}" ${dis?'disabled':''} oninput="upd('lotte','${r.id}','order',this.value)"></td>
+      <td><select class="t-select" style="width:52px;" ${dis?'disabled':''} onchange="upd('lotte','${r.id}','type',this.value)"><option${r.type==='入荷'?' selected':''}>入荷</option><option${r.type==='出荷'?' selected':''}>出荷</option></select></td>
+      <td>
+        <select class="t-select" style="width:98px;" ${dis?'disabled':''} onchange="lotSrc('${r.id}',this.value)">${LOTTE_SRC.map(s=>`<option${r.src===s?' selected':''}>${s}</option>`).join('')}</select>
+        ${r.src==='その他'?`<div style="margin-top:3px;font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px;">
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px;">${e(r.srcOther||'（未入力）')}</span>
+          ${!dis?`<button style="font-size:10px;padding:2px 6px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);cursor:pointer;white-space:nowrap;" onclick="lotSrc('${r.id}','その他')">編集</button>`:''}
+        </div>`:''}
+      </td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${r.tochaku?'done':''}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.tochaku||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','tochaku',this.value);render()">
+        <button class="stamp-btn${r.tochaku?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','tochaku')" title="現在時刻で打刻">今</button>
+      </div></td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${r.basu?'done':''} ${tC(r.tochaku,r.basu)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.basu||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','basu',this.value);render()">
+        <button class="stamp-btn${r.basu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','basu')" title="現在時刻で打刻">今</button>
+      </div></td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${r.sakuEnd?'done':''} ${tC(r.basu,r.sakuEnd)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.sakuEnd||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','sakuEnd',this.value);render()">
+        <button class="stamp-btn${r.sakuEnd?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','sakuEnd')" title="現在時刻で打刻">今</button>
+      </div></td>
+      <td><div class="time-wrap">
+        <input class="time-inp ${r.shuppatsu?'done':''} ${tC(r.sakuEnd,r.shuppatsu)}" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" value="${r.shuppatsu||''}" ${dis?'disabled':''} onblur="handleTimeInput('lotte','${r.id}','shuppatsu',this.value);render()">
+        <button class="stamp-btn${r.shuppatsu?' stamped':''}" ${dis||!isToday()?'disabled':''} onclick="stamp('lotte','${r.id}','shuppatsu')" title="現在時刻で打刻">今</button>
+      </div></td>
+    </tr>
+    ${hasLog?`<tr class="edit-log-row"><td colspan="14">✎ ${r.editLog.slice(-2).join(' ／ ')}</td></tr>`:''}`;
+  });
+  html+=`</tbody></table></div>
+  <div class="fab-area">
+    <button class="fab-driver" ${!isToday()?'disabled':''}
+      onpointerup="if(!this.disabled){startWizard('lotte')}"
+      onclick="if(!this.disabled){startWizard('lotte')}">
+      <span class="fab-driver-icon">⭐</span>
+      <span>ドライバー受付 ／ 新規登録</span>
+    </button>
+    <div class="fab-sub-row">
+      ${ed&&isToday()?`<button class="fab-sub"
+        onpointerup="addRows('lotte')"
+        onclick="addRows('lotte')">＋ 行を追加</button>`:''}
+    </div>
+  </div>`;
+  root.innerHTML=html;
+}
+
+// ---------- HISTORY ----------
+function renderHistory(){
+  const dates=allDates();
+  root.innerHTML=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">過去データ一覧 <span class="admin-tag">管理者</span></div>
+  </div>
+  <div class="admin-bar">
+    <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
+  </div>
+  <div style="padding:10px 14px 6px;font-size:12px;color:var(--text2);">${dates.length}日分の記録。選択すると各画面で閲覧・後日修正できます。</div>
+  <div class="list-wrap">
+    ${dates.map(k=>{
+      const d=S.db[k];
+      const nC=d.nyuuka.filter(r=>r.company&&!r.deleted).length;
+      const sC=d.shukka.filter(r=>r.company&&!r.deleted).length;
+      const lC=d.lotte.filter(r=>r.company&&!r.deleted).length;
+      const nDel=d.nyuuka.concat(d.shukka,d.lotte).filter(r=>r.deleted).length;
+      const nEdit=d.nyuuka.concat(d.shukka,d.lotte).filter(r=>r.editLog&&r.editLog.length>0).length;
+      const isT=k===todayKey();
+      return `<div class="list-item" onclick="S.viewDate='${k}';S.editMode=false;go('nyuuka')">
         <div>
-          <div style="font-size:15px;font-weight:600">${r.user} <span style="font-size:12px;font-weight:400;color:#888">${r.code}</span></div>
-          <div style="font-size:12px;color:#888">${r.date}｜${cnt}か所｜${r.submittedAt}提出</div>
-          ${r.note?`<div style="font-size:12px;color:#888">備考：${r.note}</div>`:''}
+          <div class="list-item-title">${fmtKey(k)} ${isT?'<span class="mode-tag today" style="font-size:10px;">本日</span>':''}</div>
+          <div class="list-item-sub">入荷 ${nC}件 ／ 出荷 ${sC}件 ／ ロッテ ${lC}件${nDel>0?` ／ 削除 ${nDel}件`:''}${nEdit>0?` ／ 修正 ${nEdit}件`:''}</div>
         </div>
-        <span class="badge badge-pending">承認待ち</span>
+        <span class="list-arrow">›</span>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ---------- DRIVERS ----------
+function renderDrivers(){
+  root.innerHTML=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">ドライバーDB <span class="admin-tag">管理者</span></div>
+  </div>
+  <div class="admin-bar">
+    <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
+  </div>
+  <div class="fab-area" style="position:static;border-top:none;border-bottom:1px solid var(--border);background:var(--surface2);">
+    <button class="fab fab-primary" onclick="openModal('driver')">＋ 新規登録</button>
+  </div>
+  <div class="list-wrap">
+    ${S.drivers.length===0?'<div style="color:var(--text2);font-size:13px;padding:16px 0;">登録されていません</div>':''}
+    ${S.drivers.map(d=>`<div class="driver-card">
+      <div class="driver-avatar">${e((d.name||'?').slice(0,2))}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:700;">${e(d.name)}</div>
+        <div style="font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e(d.company||'')} ／ ${e(d.tel)} ／ 車番:${e(d.car||'―')} ／ ${e(d.shakaku)}</div>
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-sm btn-primary" style="flex:1" onclick="approveRec('${r.id}')">承認</button>
-        <button class="btn btn-sm btn-danger" style="flex:1" onclick="rejectRec('${r.id}')">差し戻す</button>
+      <button class="fab" style="font-size:12px;padding:5px 10px;flex-shrink:0;" onclick="confirmDelDriver('${d.id}','${e(d.name)}')">削除</button>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ---------- EXPORT ----------
+function renderExport(){
+  const dates=allDates();
+  root.innerHTML=`
+  <div class="app-bar">
+    <button class="back-btn" onclick="go('home')">← ホーム</button>
+    <div class="app-bar-title">データ出力 <span class="admin-tag">管理者</span></div>
+  </div>
+  <div class="admin-bar">
+    <span class="admin-bar-msg">🔐 管理者モードでログイン中</span>
+    <button class="logout-btn" onclick="adminLogout()">ログアウト</button>
+  </div>
+  <div style="padding:14px;">
+    <div class="export-card">
+      <h4>対象日を選択</h4>
+      <select id="exp-date" style="width:100%;font-size:14px;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);margin-top:6px;">
+        ${dates.map(k=>`<option value="${k}">${fmtKey(k)}${k===todayKey()?' （本日）':''}</option>`).join('')}
+      </select>
+    </div>
+    <div class="export-card">
+      <h4>CSV出力（取適法対応）</h4>
+      <p>削除済みの行は除外。修正記録も含まれます。</p>
+      <button class="export-btn" onclick="dlCsv('nyuuka')">入荷CSV</button>
+      <button class="export-btn" onclick="dlCsv('shukka')">出荷CSV</button>
+      <button class="export-btn" onclick="dlCsv('lotte')">ロッテ様CSV</button>
+    </div>
+    <div class="export-card">
+      <h4>月単位CSV出力</h4>
+      <p>選択した月のデータをまとめてCSV出力します。</p>
+      <select id="exp-month" style="width:100%;font-size:14px;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);margin:6px 0 10px;">
+        ${getAllMonths().map(ym=>`<option value="${ym}">${ym.substring(0,4)}年${ym.substring(5,7)}月</option>`).join('')||'<option value="">データなし</option>'}
+      </select>
+      <button class="export-btn" onclick="dlMonthCsv('nyuuka')">月次入荷CSV</button>
+      <button class="export-btn" onclick="dlMonthCsv('shukka')">月次出荷CSV</button>
+      <button class="export-btn" onclick="dlMonthCsv('lotte')">月次ロッテCSV</button>
+    </div>
+    <div class="export-card">
+      <h4>全期間まとめ出力</h4>
+      <p>保存されている全日付を一括でCSV出力します。</p>
+      <button class="export-btn" onclick="dlAllCsv()">全期間 入荷CSV一括</button>
+    </div>
+    <div class="export-card">
+      <h4>印刷プレビュー</h4>
+      <p>選択した日付のデータを印刷用フォーマットで表示します。</p>
+      <button class="export-btn" onclick="printDay()">印刷プレビューを開く</button>
+    </div>
+    <div class="export-card" style="border-color:var(--border2);">
+      <h4>🔐 セキュリティ設定（削除PIN）</h4>
+      <p>設定するとデータ削除時に4桁PINの入力が必要になります。スタッフの誤削除を防止できます。</p>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <span style="font-size:13px;color:var(--text2);">現在の削除PIN：</span>
+        <span id="pin-status-label" style="font-size:13px;font-weight:700;">${getDeletePin()?'設定済み（●●●●）':'未設定'}</span>
+      </div>
+      <input id="new-pin-input" type="tel" inputmode="numeric" maxlength="4" placeholder="新しい4桁PIN（例: 1234）"
+        style="width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);margin-bottom:10px;display:block;">
+      <button class="export-btn" onclick="saveNewPin()">PINを設定・変更</button>
+      <button class="export-btn" style="color:var(--red);border-color:var(--red-bd);" onclick="clearPin()">PINを削除</button>
+      <div id="pin-save-msg" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+//  MODAL
+// ============================================================
+function openModal(type){ S.modal=type; render(); }
+function closeModal(){ S.modal=null; S.modalData={}; render(); }
+
+function renderModal(){
+  const m=S.modal;
+  let html='';
+
+  if(m==='srcOther'){
+    const {id}=S.modalData;
+    const day=S.db[S.viewDate];
+    const r=day?.lotte?.find(x=>x.id===id);
+    const cur=r?.srcOther||'';
+    modalContainer.innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeSrcOther('${id}');">
+      <div class="modal" style="max-width:360px;">
+        <h3>入荷元 / 出荷先（その他）</h3>
+        <div class="fg">
+          <label>具体的な入荷元・出荷先を入力してください</label>
+          <input id="src-other-modal-input" type="text" value="${cur}"
+            placeholder="例：東京工場、大阪センター など"
+            style="width:100%;font-size:16px;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);"
+            onkeydown="if(event.key==='Enter')closeSrcOther('${id}')">
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeSrcOther('${id}')">キャンセル</button>
+          <button class="btn-ok" onclick="closeSrcOther('${id}')">確定</button>
+        </div>
       </div>
     </div>`;
-  }).join('') : '<div class="empty">承認待ちはありません</div>';
-
-  // 承認済みセクション
-  const approvedEl = document.getElementById('approved-list');
-  if (approvedRecs.length) {
-    approvedEl.innerHTML = '<div class="section-title" style="margin-bottom:8px;margin-top:16px">承認済み</div>' +
-      approvedRecs.map(r => {
-        const cnt = Object.values(r.checked||{}).filter(Boolean).length;
-        return `<div class="card">
-          <div class="card-row">
-            <div>
-              <div style="font-size:15px;font-weight:600">${r.user} <span style="font-size:12px;font-weight:400;color:#888">${r.code}</span></div>
-              <div style="font-size:12px;color:#888">${r.date}｜${cnt}か所｜${r.submittedAt}提出</div>
-              ${r.note?`<div style="font-size:12px;color:#888">備考：${r.note}</div>`:''}
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-              <span class="badge badge-approved">承認済み</span>
-              <button class="btn btn-sm btn-danger" onclick="deleteRec('${r.id}')">削除</button>
-            </div>
-          </div>
-        </div>`;
-      }).join('');
+    setTimeout(()=>{
+      const el=document.getElementById('src-other-modal-input');
+      if(el){el.focus();el.select();}
+    },50);
+    return;
+  }
+  if(m==='confirmDelete'){
+    const {r,type}=S.modalData;
+    const label=type==='lotte'
+      ?`到着:${r.tochaku||'―'} ／ 出発:${r.shuppatsu||'―'}`
+      :`入庫:${r.nyuuko||'―'} ／ 出庫:${r.shukko||'―'}`;
+    const pin=getDeletePin();
+    const pinSection=pin?`
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <div class="pin-title">削除PINを入力</div>
+        <div class="pin-sub">4桁のPINで削除を認証します</div>
+        <div class="pin-display">
+          <div class="pin-dot" id="pd0"></div>
+          <div class="pin-dot" id="pd1"></div>
+          <div class="pin-dot" id="pd2"></div>
+          <div class="pin-dot" id="pd3"></div>
+        </div>
+        <div class="pin-pad">
+          ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-key" onpointerup="pinPress(${n})" onclick="pinPress(${n})">${n}</button>`).join('')}
+          <button class="pin-key pin-del-key pin-zero" onpointerup="pinDel()" onclick="pinDel()">⌫</button>
+        </div>
+        <div class="pin-err" id="pin-err"></div>
+      </div>`:
+      `<div class="modal-actions" style="margin-top:16px;">
+        <button class="btn-cancel" onpointerup="closeModal()" onclick="closeModal()">キャンセル</button>
+        <button class="btn-danger" onpointerup="doDelete()" onclick="doDelete()">削除する</button>
+      </div>`;
+    html=`<div class="modal">
+      <h3>⚠ この行を削除しますか？</h3>
+      <div class="modal-record">
+        <strong>No.${r.no}　${e(r.company||'（会社名未入力）')}</strong><br>
+        ${e(r.name||'')} ${r.tel?'／ '+e(r.tel):''}<br>
+        ${label}
+      </div>
+      <div class="modal-body">削除してもデータは保持されます（グレー表示）。↩ ボタンからいつでも復元できます。</div>
+      ${pinSection}
+    </div>`;
+  } else if(m==='confirmRestore'){
+    const {r}=S.modalData;
+    html=`<div class="modal">
+      <h3>削除を取り消しますか？</h3>
+      <div class="modal-record"><strong>No.${r.no}　${e(r.company||'')}</strong>　${e(r.name||'')}</div>
+      <div class="modal-body">元の状態に復元します。</div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onpointerup="closeModal()" onclick="closeModal()">キャンセル</button>
+        <button class="btn-ok" onpointerup="doRestore()" onclick="doRestore()">復元する</button>
+      </div>
+    </div>`;
+  } else if(m==='confirmDelDriver'){
+    const {name}=S.modalData;
+    html=`<div class="modal">
+      <h3>ドライバーを削除しますか？</h3>
+      <div class="modal-record"><strong>${e(name)}</strong></div>
+      <div class="modal-body">DBから削除します。過去受付データには影響しません。</div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-danger" onclick="doDelDriver()">削除する</button>
+      </div>
+    </div>`;
   } else {
-    approvedEl.innerHTML = '';
+    // NEW ENTRY / DRIVER FORMS
+    const type=m;
+    let fields='';
+    if(type==='driver'){
+      fields=`
+      <div class="fg"><label>会社名</label><input id="m-company" type="text" placeholder="（株）〇〇運輸"></div>
+      <div class="fg"><label>氏名 ＊</label><input id="m-name" type="text"></div>
+      <div class="fg"><label>電話番号 ＊（ハイフンなし）</label><input id="m-tel" type="tel" placeholder="09012345678"></div>
+      <div class="fg-row">
+        <div class="fg"><label>車番</label><input id="m-car" type="text"></div>
+        <div class="fg"><label>車格</label><select id="m-shakaku">${SHAKAKU.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      </div>`;
+    } else if(type==='lotte'){
+      fields=`
+      <div class="fg"><label>運送会社名 ＊</label><input id="m-company" type="text"></div>
+      <div class="fg-row">
+        <div class="fg"><label>氏名</label><input id="m-name" type="text"></div>
+        <div class="fg"><label>電話番号</label><input id="m-tel" type="tel" placeholder="09012345678"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>車番</label><input id="m-car" type="text"></div>
+        <div class="fg"><label>車格</label><select id="m-shakaku">${SHAKAKU.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>オーダーNo</label><input id="m-order" type="text"></div>
+        <div class="fg"><label>入荷 ／ 出荷</label><select id="m-type"><option>入荷</option><option>出荷</option></select></div>
+      </div>
+      <div class="fg"><label>入荷元 ／ 出荷先</label><select id="m-src">${LOTTE_SRC.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div class="fg hidden" id="m-src-other-fg"><label>その他（入力）</label><input id="m-src-other" type="text"></div>`;
+    } else {
+      fields=`
+      <div class="fg"><label>運送会社名 ＊</label><input id="m-company" type="text" placeholder="（株）〇〇運輸"></div>
+      <div class="fg-row">
+        <div class="fg"><label>氏名</label><input id="m-name" type="text"></div>
+        <div class="fg"><label>電話番号</label><input id="m-tel" type="tel" placeholder="09012345678"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>車番</label><input id="m-car" type="text"></div>
+        <div class="fg"><label>番号札</label><input id="m-fuda" type="number" placeholder="夜間番号"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>車格</label><select id="m-shakaku">${SHAKAKU.map(s=>`<option>${s}</option>`).join('')}</select></div>
+        <div class="fg"><label>積み方</label><select id="m-tsumi">${TSUMI.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      </div>
+      <div class="fg"><label>備考（メーカー名）</label><input id="m-biko" type="text"></div>`;
+    }
+    const titles={driver:'ドライバー登録',lotte:'ロッテ様 新規受付',nyuuka:'入荷受付 新規登録',shukka:'出荷受付 新規登録'};
+    const okLabels={driver:'登録',lotte:'受付 ＋ 到着打刻',nyuuka:'受付 ＋ 入庫打刻',shukka:'受付 ＋ 入庫打刻'};
+    html=`<div class="modal">
+      <h3>${titles[type]}</h3>${fields}
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-ok" onclick="submitModal('${type}')">${okLabels[type]}</button>
+      </div>
+    </div>`;
   }
-};
 
-window.approveRec = async id => await updateDoc(doc(db,'records',id),{status:'approved'});
-window.rejectRec  = async id => await updateDoc(doc(db,'records',id),{status:'rejected'});
-window.deleteRec  = async id => { if(!confirm('この実績を削除しますか？')) return; await deleteDoc(doc(db,'records',id)); };
+  modalContainer.innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal();">${html}</div>`;
 
-function initReport() {
-  const months = [...new Set(records.map(r=>r.rawDate?r.rawDate.slice(0,7):null).filter(Boolean))].sort().reverse();
-  const now = new Date().toISOString().slice(0,7);
-  if (!months.includes(now)) months.unshift(now);
-  document.getElementById('month-grid').innerHTML = months.slice(0,12).map(m=>
-    `<button class="month-chip ${periodFilter.monthKey===m?'active':''}" onclick="selectMonth('${m}')">${m.replace('-','年')}月</button>`).join('');
-  if (!periodFilter.from) selectMonth(now);
-  document.getElementById('filter-emp').innerHTML = '<option value="">全従業員</option>' + employees.map(e=>`<option value="${e.code}">${e.name}（${e.code}）</option>`).join('');
-  const today = new Date().toISOString().slice(0,10);
-  document.getElementById('date-from').value = today.slice(0,8)+'01';
-  document.getElementById('date-to').value = today;
-  renderReport();
-}
-
-window.setPeriodMode = function(mode) {
-  ['month','range','preset'].forEach(m => {
-    document.getElementById('pt-'+m).classList.toggle('active', m===mode);
-    document.getElementById('mode-'+m).classList.toggle('hidden', m!==mode);
+  // Src other toggle
+  const mSrc=document.getElementById('m-src');
+  if(mSrc)mSrc.addEventListener('change',function(){
+    document.getElementById('m-src-other-fg')?.classList.toggle('hidden',this.value!=='その他');
   });
-};
-
-window.selectMonth = function(m) {
-  const [y,mo] = m.split('-').map(Number);
-  periodFilter = { from: new Date(y,mo-1,1).toISOString().slice(0,10), to: new Date(y,mo,0).toISOString().slice(0,10), label: m.replace('-','年')+'月', monthKey: m };
-  document.querySelectorAll('.month-chip').forEach(c => c.classList.toggle('active', c.textContent.trim()===m.replace('-','年')+'月'));
-  renderReport();
-};
-
-window.applyRange = function() {
-  const from = document.getElementById('date-from').value, to = document.getElementById('date-to').value;
-  if (!from||!to) { alert('開始日と終了日を入力してください'); return; }
-  if (from>to) { alert('開始日は終了日より前にしてください'); return; }
-  periodFilter = { from, to, label: formatDate(from)+' 〜 '+formatDate(to), monthKey: null };
-  renderReport();
-};
-
-window.applyPreset = function(key) {
-  const today = new Date(), fmt = d => d.toISOString().slice(0,10);
-  let from, to = fmt(today), label;
-  if (key==='today') { from=to; label='今日'; }
-  else if (key==='week') { const d=new Date(today); d.setDate(today.getDate()-(today.getDay()||7)+1); from=fmt(d); label='今週'; }
-  else if (key==='last7') { const d=new Date(today); d.setDate(today.getDate()-6); from=fmt(d); label='直近7日間'; }
-  else if (key==='last30') { const d=new Date(today); d.setDate(today.getDate()-29); from=fmt(d); label='直近30日間'; }
-  else if (key==='thismonth') { from=fmt(new Date(today.getFullYear(),today.getMonth(),1)); label='今月'; }
-  else if (key==='lastmonth') { const lm=new Date(today.getFullYear(),today.getMonth()-1,1); from=fmt(lm); to=fmt(new Date(today.getFullYear(),today.getMonth(),0)); label=lm.getFullYear()+'年'+(lm.getMonth()+1)+'月'; }
-  else if (key==='quarter') { const d=new Date(today); d.setMonth(today.getMonth()-3); d.setDate(d.getDate()+1); from=fmt(d); label='直近3ヶ月'; }
-  else { from=null; to=null; label='全期間'; }
-  periodFilter = { from:from||null, to:to||null, label, monthKey:null };
-  renderReport();
-};
-
-function getFilteredRecords() {
-  const emp = document.getElementById('filter-emp')?.value||'';
-  return records.filter(r => (!periodFilter.from||r.rawDate>=periodFilter.from) && (!periodFilter.to||r.rawDate<=periodFilter.to) && (!emp||String(r.code)===String(emp)));
+  // Driver auto-fill
+  const mTel=document.getElementById('m-tel');
+  if(mTel)mTel.addEventListener('blur',function(){
+    const d=findDriver(this.value);
+    if(!d)return;
+    const mc=document.getElementById('m-company');if(mc&&!mc.value)mc.value=d.company||'';
+    const mn=document.getElementById('m-name');if(mn&&!mn.value)mn.value=d.name;
+    const mcar=document.getElementById('m-car');if(mcar&&!mcar.value)mcar.value=d.car||'';
+    const msh=document.getElementById('m-shakaku');if(msh)msh.value=d.shakaku;
+  });
 }
 
-window.renderReport = function renderReport() {
-  document.getElementById('active-period').textContent = '期間：'+periodFilter.label;
-  const recs = getFilteredRecords();
-  const rApproved = recs.filter(r=>r.status==='approved').length;
-  document.getElementById('report-summary').innerHTML=`
-    <div class="metric"><div class="metric-num">${recs.length}</div><div class="metric-label">提出件数</div></div>
-    <div class="metric"><div class="metric-num">${rApproved}</div><div class="metric-label">承認済み</div></div>
-    <div class="metric"><div class="metric-num">${recs.filter(r=>r.status==='pending').length}</div><div class="metric-label">承認待ち</div></div>`;
-  const empFilter = document.getElementById('filter-emp')?.value||'';
-  const displayEmps = empFilter ? employees.filter(e=>String(e.code)===String(empFilter)) : employees;
-  const maxC = Math.max(1,...displayEmps.map(e=>recs.filter(r=>String(r.code)===String(e.code)).length));
-  document.getElementById('emp-tbody').innerHTML = displayEmps.map(e => {
-    const mine = recs.filter(r=>String(r.code)===String(e.code));
-    const appC = mine.filter(r=>r.status==='approved').length;
-    const pct = mine.length?Math.round(appC/mine.length*100):0;
-    return `<tr>
-      <td><div style="font-weight:600">${e.name}</div><div style="font-size:11px;color:#888">${e.code}</div></td>
-      <td style="text-align:center">${mine.length}</td><td style="text-align:center">${appC}</td>
-      <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${mine.length?Math.round(mine.length/maxC*100):0}%"></div></div><span style="font-size:12px;min-width:32px">${pct}%</span></div></td>
-    </tr>`;
-  }).join('')||'<tr><td colspan="4" style="text-align:center;padding:16px;color:#888">データなし</td></tr>';
-  renderDailyChart(recs);
-};
-
-function renderDailyChart(recs) {
-  if (!periodFilter.from&&!periodFilter.to) { document.getElementById('daily-chart').innerHTML='<div style="font-size:12px;color:#888;padding:8px">全期間では日別グラフは表示されません</div>'; document.getElementById('daily-labels').innerHTML=''; return; }
-  const from=new Date(periodFilter.from||'2000-01-01'), to=new Date(periodFilter.to||new Date().toISOString().slice(0,10));
-  const days=Math.min(90,Math.round((to-from)/86400000)+1);
-  const dates=Array.from({length:days},(_,i)=>{const d=new Date(from);d.setDate(from.getDate()+i);return d.toISOString().slice(0,10);});
-  const counts=dates.map(dt=>recs.filter(r=>r.rawDate===dt).length);
-  const max=Math.max(1,...counts);
-  document.getElementById('daily-chart').innerHTML=counts.map(c=>{const h=Math.round(c/max*72);return`<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0">${c>0?`<div style="font-size:9px;color:#888">${c}</div>`:'<div style="font-size:9px;color:transparent">0</div>'}<div style="width:100%;height:${h}px;background:#1a1a1a;border-radius:2px 2px 0 0;${c>0?'min-height:3px':''}"></div><div style="height:${72-h}px"></div></div>`;}).join('');
-  document.getElementById('daily-labels').innerHTML=dates.map((dt,i)=>`<div style="flex:1;text-align:center;font-size:9px;color:#888;min-width:0">${(i===0||i===dates.length-1||(i+1)%7===0)?dt.slice(5):'·'}</div>`).join('');
+// ============================================================
+//  ACTIONS
+// ============================================================
+function confirmDelete(type,id){
+  const day=S.db[S.viewDate];
+  const r=day[type].find(x=>x.id===id);
+  if(!r)return;
+  S.modal='confirmDelete'; S.modalData={type,id,r}; render();
+}
+function confirmRestore(type,id){
+  const day=S.db[S.viewDate];
+  const r=day[type].find(x=>x.id===id);
+  if(!r)return;
+  S.modal='confirmRestore'; S.modalData={type,id,r}; render();
+}
+function confirmDelDriver(id,name){
+  S.modal='confirmDelDriver'; S.modalData={id,name}; render();
+}
+function doDelete(){
+  const {type,id}=S.modalData;
+  const r=S.db[S.viewDate][type].find(x=>x.id===id);
+  if(r){r.deleted=true;if(!r.editLog)r.editLog=[];r.editLog.push(`${nowFull()} 削除`);save();}
+  closeModal();
+}
+function doRestore(){
+  const {type,id}=S.modalData;
+  const r=S.db[S.viewDate][type].find(x=>x.id===id);
+  if(r){r.deleted=false;if(!r.editLog)r.editLog=[];r.editLog.push(`${nowFull()} 削除取消`);save();}
+  closeModal();
+}
+function doDelDriver(){
+  S.drivers=S.drivers.filter(d=>d.id!==S.modalData.id);
+  save(); closeModal(); go('drivers');
 }
 
-window.exportCSV = function(type) {
-  const recs = periodFilter.from || periodFilter.to ? getFilteredRecords() : records;
-  const empF = document.getElementById('filter-emp')?.value || '';
-  const period = periodFilter.label || '全期間';
-  // placesマップ作成（ID→名前）
-  const placeMap = {};
-  places.forEach(p=>{ placeMap[p.id]=p.name; });
-  let csv='', fname='';
-
-  if (type==='summary') {
-    // ① 従業員別集計CSV
-    const targetEmps = empF ? employees.filter(e=>String(e.code)===String(empF)) : employees;
-    csv='\uFEFF名前,社員コード,期間,提出件数,承認件数,差戻し件数,承認率\n';
-    targetEmps.forEach(e=>{
-      const mine=recs.filter(r=>String(r.code)===String(e.code));
-      const app=mine.filter(r=>r.status==='approved').length;
-      const rej=mine.filter(r=>r.status==='rejected').length;
-      const pct=mine.length?Math.round(app/mine.length*100):0;
-      csv+=`${e.name},${e.code},${period},${mine.length},${app},${rej},${pct}%\n`;
-    });
-    fname='掃除実績_集計_'+period+'.csv';
-
-  } else if (type==='approved') {
-    // ② 承認済み明細CSV（1行1件）
-    const targetRecs = (empF ? recs.filter(r=>String(r.code)===String(empF)) : recs)
-      .filter(r=>r.status==='approved');
-    csv='\uFEFF名前,社員コード,日付,掃除した場所\n';
-    targetRecs.forEach(r=>{
-      const checkedPlaces = Object.entries(r.checked||{})
-        .filter(([k,v])=>v===true)
-        .map(([k])=>placeMap[k]||'不明')
-        .join('・');
-      csv+=`${r.user},${r.code},${r.date},"${checkedPlaces}"\n`;
-    });
-    fname='掃除実績_承認済み明細_'+period+'.csv';
+let _updTimer = {};
+function upd(type,id,field,val){
+  const day=S.db[S.viewDate];if(!day)return;
+  const r=day[type].find(x=>x.id===id);
+  if(!r||r.deleted)return;
+  const old=r[field];
+  r[field]=val;
+  if(!isToday()&&old!==val&&old!==undefined&&old!==''){
+    if(!r.editLog)r.editLog=[];
+    r.editLog.push(`${nowFull()} ${field}「${old||'空'}」→「${val}」`);
   }
-  if (!csv) { alert('出力するデータがありません'); return; }
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=fname;a.click();
-  URL.revokeObjectURL(url);
-  showSaveBar('CSV出力しました ✓');
-};
+  // Debounce saves: wait 600ms after last keystroke before saving
+  const key=`${type}-${id}-${field}`;
+  clearTimeout(_updTimer[key]);
+  _updTimer[key]=setTimeout(()=>save(), 600);
+}
+function stamp(type,id,field){
+  if(!isToday())return;
+  const r=todayData()[type].find(x=>x.id===id);
+  if(!r||r.deleted)return;
+  r[field]=nowStr(); save(); render();
+}
+function stampNow(type,id,field,cur){
+  // 未打刻なら即打刻、打刻済みならモーダルで修正
+  if(!cur){ stamp(type,id,field); }
+  else { openTimeModal(type,id,field,cur); }
+}
+// ===== TEL INPUT MODAL =====
+let _telState = { type:'', id:'', buf:'' };
 
-function renderSettings() {
-  document.getElementById('place-list').innerHTML = !places.length ? '<div class="empty" style="padding:12px 0">場所が登録されていません</div>' :
-    places.map(p=>`<div class="card" style="margin-bottom:8px"><div class="card-row"><div><div style="font-size:15px;font-weight:600">${p.name}</div>${p.memo?`<div style="font-size:12px;color:#888">${p.memo}</div>`:''}</div><button class="btn btn-sm btn-danger" onclick="deletePlace('${p.id}')">削除</button></div></div>`).join('');
-  document.getElementById('emp-list').innerHTML = !employees.length ? '<div class="empty" style="padding:12px 0">登録なし</div>' :
-    `<div class="card">${employees.map(e=>`<div class="emp-row"><div class="emp-avatar">${e.name.charAt(0)}</div><div style="flex:1"><div style="font-size:14px;font-weight:600">${e.name}</div><div style="font-size:12px;color:#888">${e.code}｜${e.role==='admin'?'管理者':'従業員'}</div></div><button class="btn btn-sm btn-danger" onclick="deleteEmp('${e.id}')">削除</button></div>`).join('')}</div>`;
+function openTelModal(type, id){
+  const day = S.db[S.viewDate];
+  const r = day[type].find(x=>x.id===id);
+  if(!r) return;
+  _telState = { type, id, buf: (r.tel||'').replace(/[-\s]/g,'') };
+  renderTelModal();
 }
 
-window.openModal  = id => document.getElementById(id).classList.remove('hidden');
-window.closeModal = id => document.getElementById(id).classList.add('hidden');
+function renderTelModal(){
+  const {type, id, buf} = _telState;
+  const day = S.db[S.viewDate];
+  const r = day[type].find(x=>x.id===id);
+  if(!r) return;
 
-window.addPlace = async function() {
-  const name = document.getElementById('new-place-name').value.trim();
-  if (!name) { alert('場所名を入力してください'); return; }
-  await addDoc(collection(db,'places'), { name, memo: document.getElementById('new-place-memo').value.trim(), order: places.length });
-  closeModal('modal-place');
-  document.getElementById('new-place-name').value=''; document.getElementById('new-place-memo').value='';
-};
+  // 既存データをフォームに反映
+  const company = r.company||'';
+  const name = r.name||'';
+  const car = r.car||'';
+  const shakaku = r.shakaku||'2t';
 
-window.deletePlace = async id => { if (!confirm('この場所を削除しますか？')) return; await deleteDoc(doc(db,'places',id)); };
+  // ドライバーDB照合
+  const driver = buf.length>=10 ? findDriver(buf) : null;
 
-window.addEmp = async function() {
-  const name = document.getElementById('new-emp-name').value.trim();
-  const code = document.getElementById('new-emp-code').value.trim();
-  const role = document.getElementById('new-emp-role').value;
-  if (!name||!code) { alert('名前と社員コードを入力してください'); return; }
-  if (employees.find(e=>String(e.code)===String(code))) { alert('その社員コードはすでに使われています'); return; }
-  await addDoc(collection(db,'employees'), { name, code, role });
-  closeModal('modal-emp');
-  document.getElementById('new-emp-name').value=''; document.getElementById('new-emp-code').value='';
-  showSaveBar('従業員を追加しました ✓');
-};
+  const dispBuf = buf.length>0
+    ? buf.replace(/^(\d{3})(\d{4})(\d{0,4})$/,'$1-$2-$3').replace(/-$/,'')
+    : '';
 
-window.deleteEmp = async function(id) {
-  const emp = employees.find(e=>e.id===id);
-  if (!emp||!confirm(emp.name+'を削除しますか？')) return;
-  await deleteDoc(doc(db,'employees',id));
-};
+  const resultHtml = buf.length >= 10
+    ? (driver
+        ? `<div class="tel-lookup-result found">
+            <div class="tel-lookup-name">✓ ${driver.name}</div>
+            <div class="tel-lookup-sub">${driver.company||''} ／ 車番:${driver.car||'―'} ／ ${driver.shakaku}</div>
+           </div>`
+        : `<div class="tel-lookup-result notfound">
+            <div style="font-size:14px;font-weight:600;">新規ドライバー</div>
+            <div class="tel-lookup-sub">DBに登録がありません。下欄に会社名・氏名を入力してください。</div>
+           </div>`)
+    : '';
 
-function getTodayStr() { const d=new Date(); return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日'; }
-function formatDate(iso) { if(!iso)return''; const[y,m,d]=iso.split('-'); return y+'年'+parseInt(m)+'月'+parseInt(d)+'日'; }
-function showSaveBar(msg) {
-  const bar=document.getElementById('save-bar');
-  bar.textContent=msg; bar.style.background='#d4edda'; bar.style.color='#155724';
-  bar.classList.remove('hidden'); setTimeout(()=>bar.classList.add('hidden'),3000);
+  const showFields = buf.length >= 10;
+
+  const keyLabels = [
+    ['1',''],['2','ABC'],['3','DEF'],
+    ['4','GHI'],['5','JKL'],['6','MNO'],
+    ['7','PQRS'],['8','TUV'],['9','WXYZ'],
+  ];
+
+  const keysHtml = keyLabels.map(([n,s])=>`
+    <button class="tel-key"
+      onpointerup="telKeyPress('${n}')"
+      onclick="telKeyPress('${n}')">
+      ${n}<span class="tel-key-sub">${s}</span>
+    </button>`).join('');
+
+  const existingOverlay = document.getElementById('tel-modal-overlay');
+  if(existingOverlay) existingOverlay.remove();
+
+  const div = document.createElement('div');
+  div.id = 'tel-modal-overlay';
+  div.className = 'tel-modal-overlay';
+  div.innerHTML = `
+    <div class="tel-modal">
+      <div class="tel-modal-header">
+        <div class="tel-modal-title">電話番号を入力</div>
+        <button class="tel-modal-close"
+          onpointerup="closeTelModal()"
+          onclick="closeTelModal()">✕</button>
+      </div>
+      <div class="tel-display ${buf.length===0?'placeholder':''}" id="tel-disp">
+        ${buf.length===0 ? '090-0000-0000' : dispBuf}
+      </div>
+      ${resultHtml}
+      <div class="tel-keypad">
+        ${keysHtml}
+        <button class="tel-key" style="visibility:hidden;"></button>
+        <button class="tel-key"
+          onpointerup="telKeyPress('0')"
+          onclick="telKeyPress('0')">0</button>
+        <button class="tel-key tel-del"
+          onpointerup="telKeyDel()"
+          onclick="telKeyDel()">⌫</button>
+      </div>
+      <div class="tel-fields ${showFields?'show':''}" id="tel-fields">
+        <div style="font-size:12px;color:var(--text2);padding:4px 0 8px;font-weight:600;">確認・修正してください</div>
+        <div class="tel-field-row">
+          <div class="tel-field-label">運送会社名</div>
+          <input class="tel-field-val" id="tf-company" type="text" value="${company}" placeholder="（株）〇〇運輸">
+        </div>
+        <div class="tel-field-row">
+          <div class="tel-field-label">氏名</div>
+          <input class="tel-field-val" id="tf-name" type="text" value="${name}" placeholder="山田 太郎">
+        </div>
+        <div class="tel-field-row">
+          <div class="tel-field-label">車番</div>
+          <input class="tel-field-val" id="tf-car" type="text" value="${car}" placeholder="1234">
+        </div>
+        <div class="tel-field-row">
+          <div class="tel-field-label">車格</div>
+          <select class="tel-field-val" id="tf-shakaku">
+            ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${shakaku===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <button class="tel-confirm-btn" id="tel-confirm-btn"
+        ${buf.length<10?'disabled style="opacity:.4;"':''}
+        onpointerup="confirmTelInput()"
+        onclick="confirmTelInput()">
+        ${buf.length<10 ? '電話番号を入力してください' : '確定して受付に反映'}
+      </button>
+      <div style="height:8px;"></div>
+    </div>`;
+  document.body.appendChild(div);
 }
-function scheduleAutoSave() {
-  const now=new Date(),next=new Date(); next.setHours(18,0,0,0);
-  if(now>next)next.setDate(next.getDate()+1);
-  setTimeout(()=>{ showSaveBar('本日の実績を自動保存しました（18:00）'); scheduleAutoSave(); },next-now);
+
+function telKeyPress(n){
+  if(_telState.buf.length >= 11) return;
+  _telState.buf += n;
+  renderTelModal();
+}
+function telKeyDel(){
+  _telState.buf = _telState.buf.slice(0,-1);
+  renderTelModal();
+}
+function closeTelModal(){
+  const el = document.getElementById('tel-modal-overlay');
+  if(el) el.remove();
+}
+function confirmTelInput(){
+  const {type, id, buf} = _telState;
+  if(buf.length < 10) return;
+  const day = S.db[S.viewDate];
+  const r = day[type].find(x=>x.id===id);
+  if(!r) return;
+
+  // 電話番号保存
+  r.tel = buf;
+
+  // フォームの値を反映
+  const company = document.getElementById('tf-company')?.value?.trim()||'';
+  const name    = document.getElementById('tf-name')?.value?.trim()||'';
+  const car     = document.getElementById('tf-car')?.value?.trim()||'';
+  const shakaku = document.getElementById('tf-shakaku')?.value||'2t';
+
+  if(company) r.company = company;
+  if(name)    r.name    = name;
+  if(car)     r.car     = car;
+  r.shakaku = shakaku;
+
+  save();
+  closeTelModal();
+  render();
 }
 
-function showAlert(el,msg,type) {
-  el.className='alert alert-'+(type==='error'?'error':'success');
-  el.textContent=msg; el.classList.remove('hidden');
-  setTimeout(()=>el.classList.add('hidden'),4000);
+function lotSrc(id,val){
+  upd('lotte',id,'src',val);
+  if(val==='その他'){
+    // その他はモーダルで入力（テーブル内で隠れる問題を回避）
+    S.modal='srcOther';
+    S.modalData={id};
+    render();
+  } else {
+    render();
+  }
 }
+function telLookup(type,id,tel){
+  if(!canEdit())return;
+  const d=findDriver(tel);if(!d)return;
+  const r=S.db[S.viewDate][type].find(x=>x.id===id);
+  if(!r||r.deleted)return;
+  let changed=false;
+  if(!r.company&&d.company){r.company=d.company;changed=true;}
+  if(!r.name&&d.name){r.name=d.name;changed=true;}
+  if(!r.car&&d.car){r.car=d.car;changed=true;}
+  if(d.shakaku){r.shakaku=d.shakaku;changed=true;}
+  if(changed){save();render();}
+}
+function addRows(type){
+  if(!isToday())return;
+  const day=todayData();
+  const base=day[type].length;
+  for(let i=0;i<5;i++) day[type].push(type==='lotte'?mkLRow(base+i+1):mkNRow(base+i+1));
+  save(); render();
+}
+
+function submitModal(type){
+  const g=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
+  if(type==='driver'){
+    const name=g('m-name'),tel=g('m-tel').replace(/[-\s]/g,'');
+    if(!name||!tel){alert('氏名と電話番号は必須です');return;}
+    S.drivers.push({id:uid(),company:g('m-company'),name,tel,car:g('m-car'),shakaku:g('m-shakaku')||'2t'});
+    save(); closeModal(); return;
+  }
+  const company=g('m-company');
+  if(!company){alert('運送会社名は必須です');return;}
+  const tel=g('m-tel').replace(/[-\s]/g,'');
+  const day=todayData();
+  const arr=day[type];
+  const slot=arr.find(r=>!r.company&&!r.deleted&&(type==='lotte'?!r.tochaku:!r.nyuuko));
+  const r=slot||(type==='lotte'?mkLRow(arr.length+1):mkNRow(arr.length+1));
+  r.company=company;r.name=g('m-name');r.tel=tel;r.car=g('m-car');
+  r.shakaku=g('m-shakaku')||'2t';
+  if(type==='lotte'){
+    r.order=g('m-order');r.type=g('m-type')||'入荷';
+    const src=g('m-src');r.src=src;r.srcOther=src==='その他'?g('m-src-other'):'';
+    r.tochaku=nowStr();
+  } else {
+    r.tsumi=g('m-tsumi')||'バラ';r.fuda=g('m-fuda');r.biko=g('m-biko');
+    r.nyuuko=nowStr();
+  }
+  if(!slot)arr.push(r);
+  save(); S.modal=null; S.viewDate=todayKey(); S.screen=type; render();
+}
+
+// ============================================================
+//  EXPORT
+// ============================================================
+function saveNewPin(){
+  const el=document.getElementById('new-pin-input');
+  const val=(el?.value||'').replace(/\D/g,'');
+  if(val.length!==4){
+    document.getElementById('pin-save-msg').textContent='4桁の数字で入力してください';
+    document.getElementById('pin-save-msg').style.color='var(--red)';
+    return;
+  }
+  setDeletePin(val);
+  el.value='';
+  document.getElementById('pin-status-label').textContent='設定済み（●●●●）';
+  document.getElementById('pin-save-msg').textContent='PINを設定しました';
+  document.getElementById('pin-save-msg').style.color='var(--green)';
+  setTimeout(()=>{const m=document.getElementById('pin-save-msg');if(m)m.textContent='';},2000);
+}
+function clearPin(){
+  if(!confirm('PINを削除します。削除時の認証が不要になります。よろしいですか？')) return;
+  setDeletePin(null);
+  document.getElementById('pin-status-label').textContent='未設定';
+  document.getElementById('pin-save-msg').textContent='PINを削除しました';
+  document.getElementById('pin-save-msg').style.color='var(--amber)';
+  setTimeout(()=>{const m=document.getElementById('pin-save-msg');if(m)m.textContent='';},2000);
+}
+
+function getExpDate(){return document.getElementById('exp-date')?.value||todayKey();}
+function toCsvNS(arr, dateKey){
+  const h='日付,No,番号札,会社名,氏名,電話番号,車番,車格,積み方,メーカー名,入庫時間,出庫時間,修正記録';
+  const d = dateKey||'';
+  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[
+    csvCell(d),
+    r.no,
+    csvCell(r.fuda||''),
+    csvCell(r.company),
+    csvCell(r.name||''),
+    csvTel(r.tel),
+    csvCell(r.car||''),
+    csvCell(r.shakaku),
+    csvCell(r.tsumi),
+    csvCell(r.nyuuko||''),
+    csvCell(r.shukko||''),
+    csvCell(r.biko||''),
+    csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):''))
+  ].join(','));
+  return h+'\n'+rows.join('\n');
+}
+function toCsvL(arr, dateKey){
+  const h='日付,No,会社名,氏名,電話番号,車番,車格,オーダーNo,入荷出荷,入荷元,到着時間,バース着車,作業終了,出発時間,修正記録';
+  const d = dateKey||'';
+  const rows=arr.filter(r=>r.company&&!r.deleted).map(r=>[
+    csvCell(d),
+    r.no,
+    csvCell(r.company),
+    csvCell(r.name||''),
+    csvTel(r.tel),
+    csvCell(r.car||''),
+    csvCell(r.shakaku),
+    csvCell(r.order||''),
+    csvCell(r.type),
+    csvCell(r.src==='その他'?r.srcOther:r.src),
+    csvCell(r.tochaku||''),
+    csvCell(r.basu||''),
+    csvCell(r.sakuEnd||''),
+    csvCell(r.shuppatsu||''),
+    csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):''))
+  ].join(','));
+  return h+'\n'+rows.join('\n');
+}
+function dlCsv(type){
+  const dk=getExpDate();const day=S.db[dk];if(!day)return;
+  const content=type==='lotte'?toCsvL(day.lotte,dk):toCsvNS(day[type],dk);
+  const label=type==='nyuuka'?'入荷受付':type==='shukka'?'出荷受付':'ロッテ受付';
+  _dl(`${label}_${dk}.csv`,content);
+}
+function dlAllCsv(){
+  const dates=allDates().reverse();
+  const h='日付,No,番号札,会社名,氏名,電話番号,車番,車格,積み方,メーカー名,入庫時間,出庫時間,修正記録';
+  const rows=dates.flatMap(k=>{const d=S.db[k];return d?d.nyuuka.filter(r=>r.company&&!r.deleted).map(r=>[
+    csvCell(k),r.no,csvCell(r.fuda||''),csvCell(r.company),csvCell(r.name||''),
+    csvTel(r.tel),csvCell(r.car||''),csvCell(r.shakaku),csvCell(r.tsumi),csvCell(r.biko||''),
+    csvCell(r.nyuuko||''),csvCell(r.shukko||''),
+    csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):''))
+  ].join(',')):[];});
+  _dl('入荷受付_全期間.csv',h+'\n'+rows.join('\n'));
+}
+
+// ============================================================
+// 月単位CSV出力
+// ============================================================
+function dlMonthCsv(type){
+  var monthSel = document.getElementById('exp-month');
+  var ym = monthSel ? monthSel.value : '';
+  if(!ym){ alert('月を選択してください'); return; }
+  var dates = allDates().filter(function(k){ return k.startsWith(ym); }).sort();
+  if(dates.length===0){ alert('選択した月のデータがありません'); return; }
+  
+  var header, rows = [];
+  if(type==='lotte'){
+    header = '日付,No,会社名,氏名,電話番号,車番,車格,オーダーNo,入荷出荷,入荷元,到着時間,バース着車,作業終了,出発時間,修正記録';
+    dates.forEach(function(k){
+      var d = S.db[k];
+      if(!d) return;
+      d.lotte.filter(function(r){return r.company&&!r.deleted;}).forEach(function(r){
+        rows.push([
+          csvCell(k),r.no,csvCell(r.company),csvCell(r.name||''),csvTel(r.tel),
+          csvCell(r.car||''),csvCell(r.shakaku),csvCell(r.order||''),csvCell(r.type),
+          csvCell(r.src==='その他'?r.srcOther:r.src),
+          csvCell(r.tochaku||''),csvCell(r.basu||''),csvCell(r.sakuEnd||''),csvCell(r.shuppatsu||''),
+          csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):''))
+        ].join(','));
+      });
+    });
+  } else {
+    header = '日付,No,番号札,会社名,氏名,電話番号,車番,車格,積み方,メーカー名,入庫時間,出庫時間,修正記録';
+    dates.forEach(function(k){
+      var d = S.db[k];
+      if(!d) return;
+      d[type].filter(function(r){return r.company&&!r.deleted;}).forEach(function(r){
+        rows.push([
+          csvCell(k),r.no,csvCell(r.fuda||''),csvCell(r.company),csvCell(r.name||''),
+          csvTel(r.tel),csvCell(r.car||''),csvCell(r.shakaku),csvCell(r.tsumi),csvCell(r.biko||''),
+          csvCell(r.nyuuko||''),csvCell(r.shukko||''),
+          csvCell((r.editLog&&r.editLog.length?r.editLog.join('|'):''))
+        ].join(','));
+      });
+    });
+  }
+  
+  if(rows.length===0){ alert('該当するデータがありません'); return; }
+  
+  var label = type==='nyuuka'?'入荷受付':type==='shukka'?'出荷受付':'ロッテ受付';
+  _dl(label+'_'+ym+'.csv', header+'\n'+rows.join('\n'));
+}
+
+// 月選択肢を生成（全データの年月を取得）
+function getAllMonths(){
+  var months = {};
+  allDates().forEach(function(k){
+    months[k.substring(0,7)] = true;
+  });
+  return Object.keys(months).sort().reverse();
+}
+function _dl(fname,content){
+  const blob=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+}
+// 電話番号を Excel で文字列として認識させる（先頭0消え対策）
+function csvTel(tel){
+  if(!tel) return '';
+  // ダブルクオートで囲んで = を付ける → Excel が文字列として扱う
+  return '="'+String(tel).replace(/"/g,'""')+'"';
+}
+// CSV セルのエスケープ（カンマや改行を含む場合）
+function csvCell(v){
+  if(v===null||v===undefined) return '';
+  var s=String(v);
+  if(s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0){
+    return '"'+s.replace(/"/g,'""')+'"';
+  }
+  return s;
+}
+function printDay(){
+  const dk=getExpDate();const day=S.db[dk];if(!day)return;
+  const win=window.open('','_blank','width=950,height=750');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>入荷受付表 ${dk}</title>
+  <style>body{font-family:'Hiragino Sans',sans-serif;font-size:11px;margin:16px;}
+  h2{font-size:15px;margin-bottom:8px;}
+  table{border-collapse:collapse;width:100%;}
+  th,td{border:1px solid #999;padding:4px 6px;text-align:left;}
+  th{background:#eee;font-size:10px;}
+  @media print{button{display:none;}}</style></head><body>`);
+  win.document.write(`<h2>入荷受付表　${fmtKey(dk)}</h2>`);
+  win.document.write(`<table><tr><th>No</th><th>会社名</th><th>氏名</th><th>電話</th><th>車番</th><th>車格</th><th>積み方</th><th>入庫</th><th>出庫</th><th>備考</th></tr>`);
+  day.nyuuka.filter(r=>r.company&&!r.deleted).forEach(r=>{
+    win.document.write(`<tr><td>${r.no}</td><td>${r.company}</td><td>${r.name||''}</td><td>${r.tel||''}</td><td>${r.car||''}</td><td>${r.shakaku}</td><td>${r.tsumi}</td><td>${r.nyuuko||''}</td><td>${r.shukko||''}</td><td>${r.biko||''}</td></tr>`);
+  });
+  win.document.write(`</table><br><button onclick="window.print()">印刷</button></body></html>`);
+  win.document.close();
+}
+
+// ============================================================
+//  BOOT
+// ============================================================
+// 時刻入力バリデーション＆フォーマット
+// ===== PIN INPUT LOGIC =====
+let _pinBuffer = '';
+
+function pinPress(n){
+  if(_pinBuffer.length >= 4) return;
+  _pinBuffer += String(n);
+  updatePinDisplay();
+  if(_pinBuffer.length === 4){
+    setTimeout(()=>checkPin(), 120);
+  }
+}
+function pinDel(){
+  _pinBuffer = _pinBuffer.slice(0,-1);
+  updatePinDisplay();
+  // エラー表示をクリア
+  const errEl=document.getElementById('pin-err');
+  if(errEl) errEl.textContent='';
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    if(d) d.classList.remove('err');
+  }
+}
+function updatePinDisplay(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    if(d) d.classList.toggle('filled', i<_pinBuffer.length);
+  }
+}
+function checkPin(){
+  const pin=getDeletePin();
+  if(_pinBuffer === pin){
+    doDelete();
+  } else {
+    // エラー表示
+    for(let i=0;i<4;i++){
+      const d=document.getElementById('pd'+i);
+      if(d){d.classList.remove('filled');d.classList.add('err');}
+    }
+    const errEl=document.getElementById('pin-err');
+    if(errEl) errEl.textContent='PINが違います。もう一度入力してください。';
+    setTimeout(()=>{
+      _pinBuffer='';
+      for(let i=0;i<4;i++){
+        const d=document.getElementById('pd'+i);
+        if(d){d.classList.remove('err');d.classList.remove('filled');}
+      }
+      if(errEl) errEl.textContent='';
+    }, 1200);
+  }
+}
+
+
+// ============================================================
+//  WIZARD
+// ============================================================
+function startWizard(type){
+  WIZ.active=true; WIZ.type=type; WIZ.step='tel';
+  WIZ.tel=''; WIZ.company=''; WIZ.name='';
+  WIZ.car=''; WIZ.shakaku=''; WIZ.tsumi='';
+  WIZ.fuda=''; WIZ.biko='';
+  WIZ.order=''; WIZ.nyukaType=''; WIZ.src=''; WIZ.srcOther='';
+  WIZ.driver=null; WIZ.isNew=false; WIZ.consent=false;
+  renderWizard();
+}
+
+function wizBack(){
+  const flow = wizFlow();
+  const idx = flow.indexOf(WIZ.step);
+  if(idx<=0){ WIZ.active=false; render(); return; }
+  WIZ.step = flow[idx-1];
+  renderWizard();
+}
+function wizFlow(){
+  // lotte登録済み: tel → confirm_existing → lotte_info → final
+  // lotte新規:     tel → name → car → lotte_info → consent → final
+  // 通常登録済み: tel → confirm_existing → final
+  // 通常新規:     tel → name → car → consent → final
+  if(WIZ.type==='lotte'){
+    if(!WIZ.isNew) return ['tel','confirm_existing','lotte_info','final'];
+    return ['tel','name','car','lotte_info','consent','final'];
+  }
+  if(!WIZ.isNew) return ['tel','confirm_existing','final'];
+  return ['tel','name','car','consent','final'];
+}
+
+function renderWizard(){
+  root.innerHTML='';
+  modalContainer.innerHTML='';
+  const label=WIZ.type==='nyuuka'?'入荷受付':WIZ.type==='shukka'?'出荷受付':'ロッテ様受付';
+  const flow=wizFlow();
+  const idx=flow.indexOf(WIZ.step);
+  const total=flow.length;
+  const prog=Math.round(((idx+1)/total)*100);
+  const stepLabels={
+    tel:'電話番号入力',
+    confirm_existing:'登録情報の確認',
+    name:'会社名・お名前',
+    car:'車番・車格',
+    consent:'個人情報の取り扱い',
+    final:'受付内容の確認',
+  };
+
+  let body='';
+  let nextLabel='次へ　→';
+  let nextDisabled=false;
+  let isLastStep=(WIZ.step==='final');
+  let isStampStep=isLastStep;
+
+  // ===== STEP: 電話番号 =====
+  if(WIZ.step==='tel'){
+    const buf=WIZ.tel;
+    const disp=buf.length>0
+      ? buf.replace(/^(\d{3})(\d{4})(\d{0,4})$/,'$1-$2-$3').replace(/-$/,'')
+      : '';
+    const driver=buf.length>=10?findDriver(buf):null;
+    nextDisabled=buf.length<10;
+    nextLabel=driver?'登録情報を確認する\u3000→':'情報を入力する\u3000→';
+
+    const keyLabels=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ']];
+    const keysHtml=keyLabels.map(([n,s])=>`
+      <button class="wiz-key" onclick="wizTelKey('${n}')">
+        ${n}<span class="wiz-key-sub">${s}</span>
+      </button>`).join('');
+
+    // 照合結果（テンキーの下・固定高さ）
+    let resultHtml='';
+    if(buf.length>=10){
+      if(driver){
+        resultHtml=`<div style="background:#e8f5ea;border:1px solid #90c896;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:20px;color:#2d7a3a;">✓</span>
+          <div><div style="font-size:15px;font-weight:800;color:#2d7a3a;">${e(driver.name)}</div>
+          <div style="font-size:12px;color:#666;">${e(driver.company||'')} ／ 車番:${e(driver.car||'―')}</div></div>
+        </div>`;
+      } else {
+        resultHtml=`<div style="background:#fdf3d8;border:1px solid #e8c96a;border-radius:10px;padding:10px 14px;">
+          <div style="font-size:14px;font-weight:700;color:#8a5c00;">新規ドライバー</div>
+          <div style="font-size:12px;color:#8a5c00;">次の画面で会社名・お名前を入力してください</div>
+        </div>`;
+      }
+    }
+
+    body=`
+      <div class="wiz-section-title">電話番号を<br>入力してください</div>
+      <div class="wiz-tel-display">
+        <div class="wiz-tel-number ${buf.length===0?'empty':''}">${buf.length===0?'090-0000-0000':disp}</div>
+        <div class="wiz-tel-hint">${buf.length}/11桁</div>
+      </div>
+      <div class="wiz-keypad">
+        ${keysHtml}
+        <button class="wiz-key" style="visibility:hidden;"></button>
+        <button class="wiz-key" onclick="wizTelKey('0')">0</button>
+        <button class="wiz-key wiz-del" onclick="wizTelDel()">⌫</button>
+      </div>
+      <div style="padding:8px 0;min-height:70px;">${resultHtml}</div>`;
+
+  // ===== STEP: 登録済み確認 =====
+  } else if(WIZ.step==='confirm_existing'){
+    nextDisabled = !WIZ.shakaku;
+    nextLabel='この内容で受付する　→';
+    body=`
+      <div class="wiz-section-title">登録情報を<br>確認してください</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;gap:6px;padding:10px 14px;background:#fff8e8;border-radius:8px;border:1px solid #e8c96a;">✏️ &nbsp;各項目をタップして修正できます</div>
+      <div class="wiz-field">
+        <div class="wiz-field-row" style="background:var(--surface2);">
+          <div class="wiz-field-label">電話番号</div>
+          <div style="flex:1;font-size:20px;font-weight:800;padding:16px 8px;color:var(--text);">  ${WIZ.tel.replace(/^(\d{3})(\d{4})(\d{4})$/,'$1-$2-$3')}</div>
+        </div>
+        <div class="wiz-field-row" style="background:#fafaf8;">
+          <div class="wiz-field-label">運送会社名</div>
+          <div style="flex:1;position:relative;">
+            <input class="wiz-edit-inp" id="wiz-company" type="text" value="${e(WIZ.company)}" placeholder="（株）〇〇運輸" oninput="WIZ.company=this.value">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.4;pointer-events:none;">✏️</span>
+          </div>
+        </div>
+        <div class="wiz-field-row" style="background:#fafaf8;">
+          <div class="wiz-field-label">お名前</div>
+          <div style="flex:1;position:relative;">
+            <input class="wiz-edit-inp" id="wiz-name" type="text" value="${e(WIZ.name)}" placeholder="山田 太郎" oninput="WIZ.name=this.value">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.4;pointer-events:none;">✏️</span>
+          </div>
+        </div>
+        <div class="wiz-field-row" style="background:#fafaf8;">
+          <div class="wiz-field-label">車番</div>
+          <div style="flex:1;position:relative;">
+            <input class="wiz-edit-inp" id="wiz-car" type="text" value="${e(WIZ.car)}" placeholder="1234" oninput="WIZ.car=this.value">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.4;pointer-events:none;">✏️</span>
+          </div>
+        </div>
+        <div class="wiz-field-row" style="background:#fafaf8;">
+          <div class="wiz-field-label">車格</div>
+          <div style="flex:1;position:relative;">
+            <select class="wiz-edit-inp" id="wiz-shakaku" onchange="WIZ.shakaku=this.value" style="-webkit-appearance:none;">
+              ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${WIZ.shakaku===s?' selected':''}>${s}</option>`).join('')}
+            </select>
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.4;pointer-events:none;">✏️</span>
+          </div>
+        </div>
+      </div>`;
+
+  // ===== STEP: 会社名・氏名（新規） =====
+  } else if(WIZ.step==='name'){
+    body=`
+      <div class="wiz-section-title">会社名と<br>お名前を入力</div>
+      <div class="wiz-field">
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">運送会社名</div>
+          <input class="wiz-field-input" id="wiz-company" type="text" value="${e(WIZ.company)}" placeholder="（株）〇〇運輸" oninput="WIZ.company=this.value">
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">お名前</div>
+          <input class="wiz-field-input" id="wiz-name" type="text" value="${e(WIZ.name)}" placeholder="山田 太郎" oninput="WIZ.name=this.value">
+        </div>
+      </div>`;
+
+  // ===== STEP: 車番・車格（新規） =====
+  } else if(WIZ.step==='car'){
+    nextDisabled = !WIZ.shakaku || (WIZ.type!=='lotte' && !WIZ.tsumi);
+    body=`
+      <div class="wiz-section-title">車番と<br>車格を入力</div>
+      <div class="wiz-field">
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">車番</div>
+          <input class="wiz-field-input" id="wiz-car" type="text" value="${e(WIZ.car)}" placeholder="1234" oninput="WIZ.car=this.value">
+        </div>
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">車格</div>
+          <select class="wiz-field-select" id="wiz-shakaku" onchange="WIZ.shakaku=this.value">
+            <option value=""${!WIZ.shakaku?' selected':''}>選択してください</option>
+            ${['2t','4t','大型','コンテナ','軽'].map(s=>`<option${WIZ.shakaku===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        ${WIZ.type!=='lotte'?`<div class="wiz-field-row" style="padding:12px 16px;flex-direction:column;align-items:flex-start;gap:8px;">
+          <div class="wiz-field-label" style="padding:0;">積み方 <span style="color:var(--red);">*</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;">
+            <button type="button" onclick="WIZ.tsumi='PL';renderWizard()" style="padding:14px;border-radius:10px;border:2px solid ${WIZ.tsumi==='PL'?'var(--green)':'var(--border2)'};background:${WIZ.tsumi==='PL'?'var(--green-bg)':'#fff'};color:${WIZ.tsumi==='PL'?'var(--green)':'var(--text2)'};font-size:17px;font-weight:800;cursor:pointer;">
+              PL
+            </button>
+            <button type="button" onclick="WIZ.tsumi='バラ';renderWizard()" style="padding:14px;border-radius:10px;border:2px solid ${WIZ.tsumi==='バラ'?'var(--green)':'var(--border2)'};background:${WIZ.tsumi==='バラ'?'var(--green-bg)':'#fff'};color:${WIZ.tsumi==='バラ'?'var(--green)':'var(--text2)'};font-size:17px;font-weight:800;cursor:pointer;">
+              バラ
+            </button>
+          </div>
+        </div>`:''}
+        <div class="wiz-field-row">
+          <div class="wiz-field-label">番号札</div>
+          <input class="wiz-field-input" id="wiz-fuda" type="number" value="${WIZ.fuda||''}" placeholder="夜間番号（任意）" oninput="WIZ.fuda=this.value">
+        </div>
+      </div>`;
+
+  // ===== STEP: 個人情報同意（新規のみ） =====
+  } else if(WIZ.step==='consent'){
+    nextLabel='同意して次へ　→';
+    nextDisabled=!WIZ.consent;
+    body=`
+      <div class="wiz-section-title">個人情報の<br>取り扱いについて</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;font-size:13px;line-height:1.9;color:var(--text2);max-height:260px;overflow-y:auto;">
+        <div style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:14px;">個人情報の取り扱いに関するご説明</div>
+        ご入力いただいた氏名・電話番号・車両情報などの個人情報は、川口弥平センターにおける入荷・出荷受付業務の管理のみを目的として利用します。<br><br>
+        <b style="color:var(--text);">利用目的</b><br>
+        ・入荷・出荷受付の記録および管理<br>
+        ・次回以降の受付における自動入力<br>
+        ・取適法（貨物自動車運送事業法）に基づく記録保管<br><br>
+        <b style="color:var(--text);">第三者提供</b><br>
+        法令に基づく場合を除き、第三者への提供は行いません。<br><br>
+        <b style="color:var(--text);">管理・削除</b><br>
+        情報の確認・修正・削除をご希望の場合は、センター管理者までお申し付けください。
+      </div>
+      <div style="background:var(--surface);border:2px solid ${WIZ.consent?'var(--green)':'var(--border2)'};border-radius:var(--radius-lg);padding:18px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:border-color .15s;"
+        onpointerup="WIZ.consent=!WIZ.consent;renderWizard()"
+        onclick="WIZ.consent=!WIZ.consent;renderWizard()">
+        <div style="width:28px;height:28px;border-radius:6px;border:2px solid ${WIZ.consent?'var(--green)':'var(--border2)'};background:${WIZ.consent?'var(--green)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;">
+          ${WIZ.consent?'<span style="color:#fff;font-size:18px;font-weight:800;">✓</span>':''}
+        </div>
+        <div style="font-size:15px;font-weight:700;color:${WIZ.consent?'var(--green)':'var(--text)'};">上記の内容に同意します</div>
+      </div>`;
+
+  // ===== STEP: ロッテ情報（オーダーNo・入荷出荷・入荷元） =====
+  } else if(WIZ.step==='lotte_info'){
+    var _hasN = hasNyukaType('入荷'), _hasS = hasNyukaType('出荷');
+    var _both = _hasN && _hasS;
+    const srcOtherVisible = WIZ.src==='その他';
+    // 次へ進む条件
+    nextDisabled = !WIZ.nyukaType || !WIZ.tsumi
+      || (_hasS && (!WIZ.src || (WIZ.src==='その他' && !WIZ.srcOther)))
+      || (_hasN && (!WIZ.srcIn || (WIZ.srcIn==='その他' && !WIZ.srcInOther)));
+    // IIFE を外側で評価して変数化（template literal 内で例外が発生して真っ白になる対策）
+    var _srcSectionHtml = '';
+    try {
+      var srcOptions = ['狭山工場','狭山工場倉庫','浦和工場','第一倉庫','戸田','滋賀工場','九州工場','その他'];
+      if(_hasN){
+        var lblIn = _both ? '入荷元（入荷側）' : '入荷元';
+        _srcSectionHtml += '<div style="margin-bottom:16px;">'
+          + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">'+lblIn+' <span style="color:var(--red);">*</span></div>'
+          + '<select id="wiz-srcin" onchange="WIZ.srcIn=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid '+((WIZ.srcIn||'')?'var(--border2)':'var(--red-bd)')+';border-radius:10px;background:#fff;font-weight:'+((WIZ.srcIn||'')?'700':'400')+';color:'+((WIZ.srcIn||'')?'var(--text)':'var(--text3)')+';">'
+          + '<option value=""'+(!(WIZ.srcIn||'')?' selected':'')+'>選択してください</option>'
+          + srcOptions.map(function(s){return '<option'+((WIZ.srcIn||'')===s?' selected':'')+'>'+s+'</option>';}).join('')
+          + '</select></div>';
+        if((WIZ.srcIn||'')==='その他'){
+          _srcSectionHtml += '<div style="margin-bottom:16px;">'
+            + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（入荷元を入力） <span style="color:var(--red);">*</span></div>'
+            + '<input id="wiz-srcin-other" type="text" value="'+e(WIZ.srcInOther||'')+'" placeholder="入荷元を入力" oninput="WIZ.srcInOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">'
+            + '</div>';
+        }
+      }
+      if(_hasS){
+        var lblOut = _both ? '出荷先（出荷側）' : '出荷先';
+        _srcSectionHtml += '<div style="margin-bottom:16px;">'
+          + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">'+lblOut+' <span style="color:var(--red);">*</span></div>'
+          + '<select id="wiz-src" onchange="WIZ.src=this.value;renderWizard()" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid '+((WIZ.src||'')?'var(--border2)':'var(--red-bd)')+';border-radius:10px;background:#fff;font-weight:'+((WIZ.src||'')?'700':'400')+';color:'+((WIZ.src||'')?'var(--text)':'var(--text3)')+';">'
+          + '<option value=""'+(!(WIZ.src||'')?' selected':'')+'>選択してください</option>'
+          + srcOptions.map(function(s){return '<option'+((WIZ.src||'')===s?' selected':'')+'>'+s+'</option>';}).join('')
+          + '</select></div>';
+        if((WIZ.src||'')==='その他'){
+          _srcSectionHtml += '<div style="margin-bottom:16px;">'
+            + '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">その他（出荷先を入力） <span style="color:var(--red);">*</span></div>'
+            + '<input id="wiz-src-other" type="text" value="'+e(WIZ.srcOther||'')+'" placeholder="出荷先を入力" oninput="WIZ.srcOther=this.value" style="width:100%;font-size:18px;padding:14px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;">'
+            + '</div>';
+        }
+      }
+    } catch(err) {
+      console.error('src section error:', err);
+      _srcSectionHtml = '<div style="color:red;padding:12px;">エラー: '+err.message+'</div>';
+    }
+    body=`
+      <div class="wiz-section-title">オーダー情報を<br>入力してください</div>
+
+      <div style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">入荷 / 出荷 <span style="color:var(--red);">*</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button type="button" onclick="toggleNyukaType('入荷')" style="padding:20px;border-radius:12px;border:2px solid ${hasNyukaType('入荷')?'var(--green)':'var(--border2)'};background:${hasNyukaType('入荷')?'var(--green-bg)':'#fff'};color:${hasNyukaType('入荷')?'var(--green)':'var(--text2)'};font-size:18px;font-weight:800;cursor:pointer;position:relative;">
+            ${hasNyukaType('入荷')?'<span style="position:absolute;top:6px;right:8px;font-size:16px;">✓</span>':''}
+            📥 入荷
+          </button>
+          <button type="button" onclick="toggleNyukaType('出荷')" style="padding:20px;border-radius:12px;border:2px solid ${hasNyukaType('出荷')?'var(--green)':'var(--border2)'};background:${hasNyukaType('出荷')?'var(--green-bg)':'#fff'};color:${hasNyukaType('出荷')?'var(--green)':'var(--text2)'};font-size:18px;font-weight:800;cursor:pointer;position:relative;">
+            ${hasNyukaType('出荷')?'<span style="position:absolute;top:6px;right:8px;font-size:16px;">✓</span>':''}
+            📤 出荷
+          </button>
+        </div>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px;padding:0 4px;">※ 両方ある場合は両方タップしてください（2行に分けて登録されます）</div>
+      </div>
+
+      ${_both?`
+      <div style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo（入荷）</div>
+        <input id="wiz-order-in" type="text" inputmode="numeric" value="${e(WIZ.orderIn||'')}" placeholder="例: 12345" oninput="WIZ.orderIn=this.value" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid var(--border2);border-radius:10px;background:#fff;font-weight:700;-webkit-appearance:none;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo（出荷）</div>
+        <input id="wiz-order-out" type="text" inputmode="numeric" value="${e(WIZ.orderOut||'')}" placeholder="例: 12345" oninput="WIZ.orderOut=this.value" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid var(--border2);border-radius:10px;background:#fff;font-weight:700;-webkit-appearance:none;">
+      </div>
+      `:`
+      <div style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">オーダーNo</div>
+        <input id="wiz-order" type="text" inputmode="numeric" value="${e(WIZ.order||'')}" placeholder="例: 12345 または 12345,67890" oninput="WIZ.order=this.value" style="width:100%;font-size:20px;padding:18px 14px;border:1px solid var(--border2);border-radius:10px;background:#fff;font-weight:700;-webkit-appearance:none;">
+        <div style="font-size:11px;color:var(--text2);margin-top:6px;">※ 複数ある場合はカンマ（,）で区切ってください</div>
+      </div>
+      `}
+
+${_srcSectionHtml}
+
+      <div style="margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">積み方 <span style="color:var(--red);">*</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button type="button" onclick="WIZ.tsumi='PL';renderWizard()" style="padding:18px;border-radius:12px;border:2px solid ${WIZ.tsumi==='PL'?'var(--green)':'var(--border2)'};background:${WIZ.tsumi==='PL'?'var(--green-bg)':'#fff'};color:${WIZ.tsumi==='PL'?'var(--green)':'var(--text2)'};font-size:18px;font-weight:800;cursor:pointer;">
+            PL
+          </button>
+          <button type="button" onclick="WIZ.tsumi='バラ';renderWizard()" style="padding:18px;border-radius:12px;border:2px solid ${WIZ.tsumi==='バラ'?'var(--green)':'var(--border2)'};background:${WIZ.tsumi==='バラ'?'var(--green-bg)':'#fff'};color:${WIZ.tsumi==='バラ'?'var(--green)':'var(--text2)'};font-size:18px;font-weight:800;cursor:pointer;">
+            バラ
+          </button>
+        </div>
+      </div>
+
+      <div style="font-size:13px;color:var(--text2);line-height:1.7;padding:8px 12px;background:var(--surface2);border-radius:8px;margin-top:8px;">
+        ※ 必須項目（<span style="color:var(--red);">*</span>）を入力してから次へ進んでください<br>
+        ※ バース着車・作業終了・出発時間は一覧画面から打刻してください
+      </div>`;
+
+  // ===== STEP: 最終確認 =====
+  } else if(WIZ.step==='final'){
+    isStampStep=true;
+    body=`
+      <div class="wiz-section-title">内容を確認して<br>受付を完了</div>
+      <div class="wiz-confirm-card">
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">電話番号</div>
+          <div class="wiz-confirm-val">${WIZ.tel.replace(/^(\d{3})(\d{4})(\d{4})$/,'$1-$2-$3')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">運送会社</div>
+          <div class="wiz-confirm-val">${e(WIZ.company||'―')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">お名前</div>
+          <div class="wiz-confirm-val">${e(WIZ.name||'―')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">車番</div>
+          <div class="wiz-confirm-val">${e(WIZ.car||'―')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">車格</div>
+          <div class="wiz-confirm-val">${WIZ.shakaku}</div>
+        </div>
+        ${WIZ.type==='lotte'?`
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">オーダーNo</div>
+          <div class="wiz-confirm-val">${e(WIZ.order||'―')}</div>
+        </div>
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">入荷/出荷</div>
+          <div class="wiz-confirm-val">${WIZ.nyukaType}</div>
+        </div>
+        ${hasNyukaType('入荷')?`
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">入荷元</div>
+          <div class="wiz-confirm-val">${WIZ.srcIn==='その他'?e(WIZ.srcInOther||'その他'):WIZ.srcIn}</div>
+        </div>`:''}
+        ${hasNyukaType('出荷')?`
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">出荷先</div>
+          <div class="wiz-confirm-val">${WIZ.src==='その他'?e(WIZ.srcOther||'その他'):WIZ.src}</div>
+        </div>`:''}
+        ${hasNyukaType('入荷')&&hasNyukaType('出荷')?`
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">オーダーNo</div>
+          <div class="wiz-confirm-val" style="font-size:12px;">入荷:${e(WIZ.orderIn||'―')} ／ 出荷:${e(WIZ.orderOut||'―')}</div>
+        </div>`:`
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">オーダーNo</div>
+          <div class="wiz-confirm-val">${e(WIZ.order||'―')}</div>
+        </div>`}
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">積み方</div>
+          <div class="wiz-confirm-val">${WIZ.tsumi||''}</div>
+        </div>`:`
+        <div class="wiz-confirm-row">
+          <div class="wiz-confirm-label">積み方</div>
+          <div class="wiz-confirm-val">${WIZ.tsumi||'バラ'}</div>
+        </div>`}
+      </div>
+      <div style="background:var(--green-bg);border:1px solid var(--green-bd);border-radius:var(--radius-lg);padding:14px 16px;font-size:14px;color:var(--green);font-weight:600;line-height:1.7;">
+        ${WIZ.type==='lotte'
+          ?'「受付完了 ＋ 到着打刻」を押すと現在時刻で到着時間が登録されます。バース着車・作業終了・出発は一覧画面で打刻してください。'
+          :'「受付完了 ＋ 入庫打刻」を押すと現在時刻で入庫時間が登録されます。'
+        }
+      </div>`;
+  }
+
+  root.innerHTML=`
+  <div class="wiz-screen">
+    <div class="wiz-header">
+      <button class="wiz-back" onpointerup="wizBack()" onclick="wizBack()">←</button>
+      <div class="wiz-header-info">
+        <div class="wiz-title">${label} 受付</div>
+        <div class="wiz-step-label">${stepLabels[WIZ.step]||''}</div>
+      </div>
+    </div>
+    <div class="wiz-progress"><div class="wiz-progress-bar" style="width:${prog}%;"></div></div>
+    <div class="wiz-body">${body}</div>
+    <div class="wiz-footer">
+      ${isStampStep
+        ? `<button class="wiz-next-btn stamp"
+             onpointerup="wizComplete()"
+             onclick="wizComplete()">${WIZ.type==='lotte'?'受付完了 ＋ 到着打刻':'受付完了 ＋ 入庫打刻'}</button>`
+        : `<button class="wiz-next-btn"
+             ${nextDisabled?'disabled':''}
+             onpointerup="if(!this.disabled){wizNext()}"
+             onclick="if(!this.disabled){wizNext()}">${nextLabel}</button>`
+      }
+    </div>
+  </div>`;
+}
+
+
+function wizTelKey(n){
+  if(WIZ.tel.length>=11) return;
+  WIZ.tel+=n;
+  renderWizard();
+}
+function wizTelDel(){
+  WIZ.tel=WIZ.tel.slice(0,-1);
+  renderWizard();
+}
+
+function wizNext(){
+  const flow=wizFlow();
+  const idx=flow.indexOf(WIZ.step);
+  // lotte_info でオーダーNoチェック（inputから取得）
+  if(WIZ.step==='lotte_info'){
+    var _hN = hasNyukaType('入荷'), _hS = hasNyukaType('出荷');
+    if(_hN && _hS){
+      // 両方選択
+      var oin = document.getElementById('wiz-order-in');
+      var oout = document.getElementById('wiz-order-out');
+      if(oin) WIZ.orderIn = oin.value.trim();
+      if(oout) WIZ.orderOut = oout.value.trim();
+      if(!WIZ.orderIn && !WIZ.orderOut){
+        alert('オーダーNoを入力してください（入荷・出荷どちらかは必須）');
+        if(oin) oin.focus();
+        return;
+      }
+    } else {
+      // 単独選択
+      var ordInp = document.getElementById('wiz-order');
+      if(ordInp) WIZ.order = ordInp.value.trim();
+      if(!WIZ.order){
+        alert('オーダーNoを入力してください');
+        if(ordInp) ordInp.focus();
+        return;
+      }
+    }
+  }
+  if(WIZ.step==='tel'){
+    const d=findDriver(WIZ.tel);
+    if(d){
+      WIZ.driver=d; WIZ.isNew=false;
+      WIZ.company=d.company||''; WIZ.name=d.name||'';
+      WIZ.car=d.car||''; WIZ.shakaku=d.shakaku||'';
+      WIZ.tsumi=d.tsumi||'';
+      WIZ.step='confirm_existing';
+    } else {
+      WIZ.driver=null; WIZ.isNew=true; WIZ.step='name';
+    }
+  } else if(WIZ.step==='confirm_existing'){
+    const c=document.getElementById('wiz-company');
+    const n=document.getElementById('wiz-name');
+    const car=document.getElementById('wiz-car');
+    const sh=document.getElementById('wiz-shakaku');
+    const ts=document.getElementById('wiz-tsumi');
+    if(c)WIZ.company=c.value.trim(); if(n)WIZ.name=n.value.trim();
+    if(car)WIZ.car=car.value.trim(); if(sh)WIZ.shakaku=sh.value;
+    if(ts)WIZ.tsumi=ts.value;
+    WIZ.step=flow[idx+1];
+  } else if(WIZ.step==='name'){
+    const c=document.getElementById('wiz-company');
+    const n=document.getElementById('wiz-name');
+    if(c)WIZ.company=c.value.trim(); if(n)WIZ.name=n.value.trim();
+    WIZ.step='car';
+  } else if(WIZ.step==='car'){
+    const car=document.getElementById('wiz-car');
+    const sh=document.getElementById('wiz-shakaku');
+    const ts=document.getElementById('wiz-tsumi');
+    const fd=document.getElementById('wiz-fuda');
+    if(car)WIZ.car=car.value.trim(); if(sh)WIZ.shakaku=sh.value;
+    if(ts)WIZ.tsumi=ts.value; if(fd)WIZ.fuda=fd.value;
+    WIZ.step=flow[idx+1];
+  } else if(WIZ.step==='lotte_info'){
+    const ord=document.getElementById('wiz-order');
+    const src=document.getElementById('wiz-src');
+    const sro=document.getElementById('wiz-src-other');
+    const sin=document.getElementById('wiz-srcin');
+    const sio=document.getElementById('wiz-srcin-other');
+    if(ord)WIZ.order=ord.value.trim();
+    if(src)WIZ.src=src.value;
+    if(sro)WIZ.srcOther=sro.value.trim();
+    if(sin)WIZ.srcIn=sin.value;
+    if(sio)WIZ.srcInOther=sio.value.trim();
+    WIZ.step=flow[idx+1];
+  } else if(WIZ.step==='consent'){
+    WIZ.step='final';
+  }
+  renderWizard();
+}
+
+function wizComplete(){
+  // confirm_existing の場合、入力修正をWIZに反映
+  if(WIZ.step==='confirm_existing'){
+    const c=document.getElementById('wiz-company');
+    const n=document.getElementById('wiz-name');
+    const car=document.getElementById('wiz-car');
+    const sha=document.getElementById('wiz-shakaku');
+    const tsu2=document.getElementById('wiz-tsumi');
+    if(c) WIZ.company=c.value.trim();
+    if(n) WIZ.name=n.value.trim();
+    if(car) WIZ.car=car.value.trim();
+    if(sha) WIZ.shakaku=sha.value;
+    if(tsu2) WIZ.tsumi=tsu2.value;
+    // 登録済みドライバーのDB情報を最新に更新
+    if(WIZ.driver){
+      WIZ.driver.company=WIZ.company;
+      WIZ.driver.name=WIZ.name;
+      WIZ.driver.car=WIZ.car;
+      WIZ.driver.shakaku=WIZ.shakaku;
+    }
+  }
+
+  const day=todayData();
+  const arr=day[WIZ.type];
+  if(WIZ.type==='lotte'){
+    // 入荷/出荷両方選択されている場合は2行に分ける
+    var types = WIZ.nyukaType ? WIZ.nyukaType.split(',').filter(function(x){return x;}) : [''];
+    var nowT = nowStr();
+    types.forEach(function(typ){
+      var slot=arr.find(function(r){return !r.company&&!r.tochaku&&!r.deleted;});
+      var r=slot||mkLRow(arr.length+1);
+      r.tel=WIZ.tel;
+      r.company=WIZ.company;
+      r.name=WIZ.name;
+      r.car=WIZ.car;
+      r.shakaku=WIZ.shakaku;
+      r.tsumi=WIZ.tsumi||'';
+      r.order=WIZ.order||'';
+      r.type=typ;
+      // 出荷なら入荷元(src)、入荷なら出荷先(srcIn)を使用
+      if(typ==='入荷'){
+        r.src=WIZ.srcIn||'';
+        r.srcOther=WIZ.srcIn==='その他'?WIZ.srcInOther:'';
+      } else {
+        r.src=WIZ.src||'';
+        r.srcOther=WIZ.src==='その他'?WIZ.srcOther:'';
+      }
+      r.tochaku=nowT; // 到着時間を打刻（両行とも同じ時刻）
+      r.basu=''; r.sakuEnd=''; r.shuppatsu='';
+      if(!slot) arr.push(r);
+    });
+  } else {
+    const slot=arr.find(r=>!r.company&&!r.nyuuko&&!r.deleted);
+    const r=slot||mkNRow(arr.length+1);
+    r.tel=WIZ.tel;
+    r.company=WIZ.company;
+    r.name=WIZ.name;
+    r.car=WIZ.car;
+    r.shakaku=WIZ.shakaku||'';
+    r.tsumi=WIZ.tsumi||'';
+    r.fuda=WIZ.fuda||'';
+    r.nyuuko=nowStr();
+    if(!slot) arr.push(r);
+  }
+
+  // 新規ドライバーは同意済みなのでDBに自動登録
+  if(WIZ.isNew && WIZ.consent && WIZ.tel && WIZ.name){
+    S.drivers.push({
+      id:uid(),company:WIZ.company,name:WIZ.name,
+      tel:WIZ.tel,car:WIZ.car,shakaku:WIZ.shakaku,tsumi:WIZ.tsumi||''
+    });
+  }
+  // 登録済みドライバーの情報を更新（修正があれば）
+  if(WIZ.driver){
+    const idx=S.drivers.findIndex(d=>d.tel===WIZ.tel);
+    if(idx>=0) S.drivers[idx]={...S.drivers[idx],company:WIZ.company,name:WIZ.name,car:WIZ.car,shakaku:WIZ.shakaku,tsumi:WIZ.tsumi||''};
+  }
+
+  save();
+  WIZ.active=false;
+  S.viewDate=todayKey();
+  S.screen=WIZ.type;
+  render();
+}
+
+
+function closeSrcOther(id){
+  const el=document.getElementById('src-other-modal-input');
+  const val=el?el.value.trim():'';
+  if(val){
+    const day=S.db[S.viewDate];
+    const r=day?.lotte?.find(x=>x.id===id);
+    if(r){r.srcOther=val;save();}
+  }
+  S.modal=null;S.modalData={};
+  render();
+}
+
+function timeInputBlur(el, saveFn) {
+  let v = el.value.trim().replace(/[^\d:]/g, '');
+  if (!v) { el.value = ''; saveFn(); return; }
+  // 数字のみ4桁 → HH:MM に変換 (e.g. "1430" → "14:30")
+  if (/^\d{3,4}$/.test(v)) {
+    v = v.length === 3 ? '0' + v : v;
+    v = v.slice(0,2) + ':' + v.slice(2);
+  }
+  // HH:MM バリデーション
+  const m = v.match(/^(\d{1,2}):(\d{2})$/);
+  if (m) {
+    const h = parseInt(m[1]), min = parseInt(m[2]);
+    if (h >= 0 && h <= 23 && min >= 0 && min <= 59) {
+      el.value = String(h).padStart(2,'0') + ':' + String(min).padStart(2,'0');
+      el.classList.remove('err');
+      saveFn();
+      return;
+    }
+  }
+  el.classList.add('err');
+  el.title = '時刻は HH:MM 形式で入力してください（例: 14:30）';
+}
+
+
+
+// ============================================================
+// ORDER NO INPUT MODAL
+// ============================================================
+
+// ============================================================
+// NYUKATYPE TOGGLE (multi-select)
+// ============================================================
+function hasNyukaType(t){
+  if(!WIZ.nyukaType) return false;
+  return WIZ.nyukaType.split(',').indexOf(t)>=0;
+}
+function toggleNyukaType(t){
+  var arr = WIZ.nyukaType ? WIZ.nyukaType.split(',').filter(function(x){return x;}) : [];
+  var i = arr.indexOf(t);
+  if(i>=0) arr.splice(i,1);
+  else arr.push(t);
+  // 順序固定（入荷→出荷）
+  var sorted=[];
+  if(arr.indexOf('入荷')>=0) sorted.push('入荷');
+  if(arr.indexOf('出荷')>=0) sorted.push('出荷');
+  WIZ.nyukaType = sorted.join(',');
+  renderWizard();
+}
+
+function openOrderModal(){
+  try { renderOrderModal(); } catch(e) { console.error('openOrderModal error:', e); alert('入力モーダルが開けません: '+e.message); }
+}
+function renderOrderModal(){
+  var old = document.getElementById('_order_overlay');
+  if(old) old.remove();
+  var buf = WIZ.order || '';
+
+  var ov = document.createElement('div');
+  ov.id='_order_overlay'; ov.className='order-modal-overlay';
+
+  var md = document.createElement('div'); md.className='order-modal';
+
+  // 閉じるボタンのクリックでoverlayも閉じる
+  var hdr = document.createElement('div'); hdr.className='order-modal-hdr';
+  var ttl = document.createElement('div'); ttl.className='order-modal-title'; ttl.textContent='オーダーNo';
+  var cls = document.createElement('button'); cls.className='order-modal-close'; cls.type='button';
+  cls.textContent='✕';
+  cls.onclick = function(){ ov.remove(); };
+  hdr.appendChild(ttl); hdr.appendChild(cls); md.appendChild(hdr);
+
+  var dw = document.createElement('div'); dw.className='order-disp-wrap';
+  var dp = document.createElement('div'); dp.className='order-disp'+(buf.length===0?' empty':'');
+  dp.textContent = buf.length===0 ? '例: 12345 または 12345,67890' : buf;
+  dw.appendChild(dp); md.appendChild(dw);
+
+  var kp = document.createElement('div'); kp.className='order-keypad';
+  function addKey(lbl, cls, handler){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = cls;
+    b.textContent = lbl;
+    b.onclick = handler;
+    return b;
+  }
+  [1,2,3,4,5,6,7,8,9].forEach(function(n){
+    kp.appendChild(addKey(n, 'order-key', function(){ orderKey(String(n)); }));
+  });
+  kp.appendChild(addKey(',', 'order-key order-comma', function(){ orderKey(','); }));
+  kp.appendChild(addKey('0', 'order-key', function(){ orderKey('0'); }));
+  kp.appendChild(addKey('⌫', 'order-key order-del', function(){ orderDel(); }));
+  md.appendChild(kp);
+
+  var ok = document.createElement('button'); ok.type='button'; ok.className='order-ok-btn';
+  ok.textContent = buf.length>0 ? '確定（'+buf+'）' : 'オーダーNoを入力してください';
+  if(buf.length===0) ok.disabled=true;
+  ok.onclick = function(){ 
+    if(WIZ.order && WIZ.order.length>0) {
+      ov.remove();
+      renderWizard();
+    }
+  };
+  md.appendChild(ok);
+
+  var sp = document.createElement('div'); sp.style.height='8px'; md.appendChild(sp);
+  ov.appendChild(md);
+  document.body.appendChild(ov);
+}
+function orderKey(c){
+  if(c===','){
+    if(!WIZ.order || WIZ.order.length===0) return;
+    if(WIZ.order.endsWith(',')) return;
+  }
+  WIZ.order = (WIZ.order||'') + c;
+  renderOrderModal();
+}
+function orderDel(){
+  WIZ.order = (WIZ.order||'').slice(0,-1);
+  renderOrderModal();
+}
+
+// ============================================================
+// TIME INPUT MODAL
+// ============================================================
+var _TM = {type:'',id:'',field:'',buf:''};
+var _TM_LABELS = {nyuuko:'入庫時間',shukko:'出庫時間',tochaku:'到着時間',basu:'バース着車',sakuEnd:'作業終了',shuppatsu:'出発時間'};
+
+function openTimeModal(type,id,field,cur){
+  _TM = {type:type,id:id,field:field,buf:''};
+  if(cur && /^\d{2}:\d{2}$/.test(cur)) _TM.buf = cur.replace(':','');
+  renderTimeModal();
+}
+function renderTimeModal(){
+  var old = document.getElementById('_tm_overlay');
+  if(old) old.remove();
+  var buf=_TM.buf;
+  var dh = buf.length>=2?buf.slice(0,2):(buf.length===1?buf+'_':'--');
+  var dm = buf.length>=4?buf.slice(2,4):(buf.length===3?buf.slice(2)+'_':'--');
+  var valid = buf.length===4;
+  var hint = buf.length<2?'時（00〜23）を入力':buf.length<4?'分（00〜59）を入力':'OKを押して確定';
+
+  var ov = document.createElement('div');
+  ov.id='_tm_overlay'; ov.className='time-modal-overlay';
+  var md = document.createElement('div'); md.className='time-modal';
+
+  // header
+  var hdr=document.createElement('div'); hdr.className='time-modal-hdr';
+  var ttl=document.createElement('div'); ttl.className='time-modal-title'; ttl.textContent=_TM_LABELS[_TM.field]||'時刻入力';
+  var cls=document.createElement('button'); cls.className='time-modal-close'; cls.textContent='✕'; cls.onclick=function(){ov.remove();};
+  hdr.appendChild(ttl); hdr.appendChild(cls); md.appendChild(hdr);
+
+  // display
+  var dw=document.createElement('div'); dw.className='time-disp-wrap';
+  var dp=document.createElement('div'); dp.className='time-disp'+(buf.length===0?' empty':'');
+  dp.innerHTML = buf.length===0?'--:--':'<span>'+dh+'</span><span style="margin:0 4px;">:</span><span>'+dm+'</span>';
+  var ht=document.createElement('div'); ht.className='time-hint'; ht.textContent=hint;
+  dw.appendChild(dp); dw.appendChild(ht); md.appendChild(dw);
+
+  // keypad
+  var kp=document.createElement('div'); kp.className='time-keypad';
+  [1,2,3,4,5,6,7,8,9].forEach(function(n){
+    var b=document.createElement('button'); b.className='time-key'; b.textContent=n;
+    b.onclick=function(){tmKey(String(n));}; kp.appendChild(b);
+  });
+  var sp=document.createElement('button'); sp.style.visibility='hidden'; kp.appendChild(sp);
+  var z=document.createElement('button'); z.className='time-key'; z.textContent='0'; z.onclick=function(){tmKey('0');}; kp.appendChild(z);
+  var dl=document.createElement('button'); dl.className='time-key time-del'; dl.textContent='⌫'; dl.onclick=function(){tmDel();}; kp.appendChild(dl);
+  md.appendChild(kp);
+
+  // now button
+  var nb=document.createElement('button'); nb.className='time-now-btn';
+  nb.textContent='現在時刻を使用（'+nowStr()+'）';
+  nb.onclick=function(){ _TM.buf=nowStr().replace(':',''); tmConfirm(); };
+  md.appendChild(nb);
+
+  // ok button
+  var ok=document.createElement('button'); ok.className='time-ok-btn';
+  ok.textContent=valid?'確定（'+dh+':'+dm+'）':'時刻を入力してください';
+  if(!valid) ok.disabled=true;
+  ok.onclick=function(){if(valid)tmConfirm();};
+  md.appendChild(ok);
+
+  var sp2=document.createElement('div'); sp2.style.height='8px'; md.appendChild(sp2);
+  ov.appendChild(md);
+  document.body.appendChild(ov);
+}
+function tmKey(n){
+  var buf=_TM.buf;
+  if(buf.length>=4) return;
+  var next=buf+n;
+  if(next.length===1 && +n>2) return;
+  if(next.length===2 && +next>23) return;
+  if(next.length===3 && +n>5) return;
+  _TM.buf=next; renderTimeModal();
+}
+function tmDel(){ _TM.buf=_TM.buf.slice(0,-1); renderTimeModal(); }
+function tmConfirm(){
+  var buf=_TM.buf; if(buf.length!==4) return;
+  var ts=buf.slice(0,2)+':'+buf.slice(2,4);
+  var day=S.db[S.viewDate]; if(!day) return;
+  var arr=day[_TM.type]; if(!arr) return;
+  var r=arr.find(function(x){return x.id===_TM.id;});
+  if(r){
+    var old=r[_TM.field]; r[_TM.field]=ts;
+    if(!isToday()&&old!==ts){
+      if(!r.editLog)r.editLog=[];
+      r.editLog.push(nowFull()+' '+_TM.field+'「'+(old||'空')+'」→「'+ts+'」');
+    }
+    save();
+  }
+  var ov=document.getElementById('_tm_overlay'); if(ov)ov.remove();
+  render();
+}
+
+
+// 時刻の直接入力処理
+function handleTimeInput(type, id, field, val) {
+  if(!val) {
+    updField(type, id, field, '');
+    return;
+  }
+  // HHMM → HH:MM 自動変換
+  var cleaned = val.replace(/[^0-9]/g,'');
+  if(cleaned.length === 3) cleaned = '0' + cleaned;
+  if(cleaned.length === 4) {
+    var h = parseInt(cleaned.slice(0,2));
+    var m = parseInt(cleaned.slice(2,4));
+    if(h>=0 && h<=23 && m>=0 && m<=59) {
+      var formatted = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+      updField(type, id, field, formatted);
+      return;
+    }
+  }
+  // HH:MM形式をそのまま
+  var m2 = val.match(/^(\d{1,2}):(\d{2})$/);
+  if(m2) {
+    var h2 = parseInt(m2[1]), mn2 = parseInt(m2[2]);
+    if(h2>=0 && h2<=23 && mn2>=0 && mn2<=59) {
+      var f2 = String(h2).padStart(2,'0') + ':' + String(mn2).padStart(2,'0');
+      updField(type, id, field, f2);
+      return;
+    }
+  }
+  // それ以外はそのまま保存
+  updField(type, id, field, val);
+}
+function updField(type, id, field, val) {
+  var day = S.db[S.viewDate];
+  if(!day) return;
+  var r = day[type].find(function(x){ return x.id === id; });
+  if(!r || r.deleted) return;
+  var old = r[field];
+  r[field] = val;
+  if(!isToday() && old !== val && old !== undefined && old !== '') {
+    if(!r.editLog) r.editLog = [];
+    r.editLog.push(nowFull() + ' ' + field + '「'+(old||'空')+'」→「'+val+'」');
+  }
+  save();
+}
+
+initFirebase();
+render();
+// Refresh alert status every 30s
+setInterval(()=>{
+  if(!S.modal && ['nyuuka','shukka','lotte','home'].includes(S.screen)) render();
+}, 30000);
 </script>
 </body>
 </html>
